@@ -1,0 +1,119 @@
+# Tracked Best Buy listings.
+#
+# Selected on 2026-09-11 by filtering Best Buy's laptop category for the
+# Intel Core Ultra 5 226V / 16GB / 512GB configuration. That processor is
+# carried by only two brands on Best Buy at present (HP and ASUS), so the
+# comparison set is smaller than the assessment's illustrative example.
+#
+# `declared` is the configuration read from each product page's specification
+# table, not from the listing title. The collector re-parses the live title on
+# every run and flags any divergence from what is declared here.
+
+meta:
+  retailer: Best Buy
+  currency: USD
+  notes: >
+    Prices are the US Best Buy online price for new-condition units, excluding
+    tax, shipping, member pricing and open-box offers. Two of the three
+    listings are fulfilled by third-party marketplace sellers rather than Best
+    Buy directly, which may affect how their prices move.
+
+products:
+  - sku: "6603654"
+    brand: ASUS
+    model_name: ExpertBook P5 2.5K
+    title: "ASUS - ExpertBook P5 2.5K Laptop - Copilot+ PC - Intel Core Ultra 5 226V with 16GB Memory - 512GB SSD - Misty Grey"
+    url: "https://www.bestbuy.com/product/asus-expertbook-p5-2-5k-laptop-copilot-pc-intel-core-ultra-5-226v-with-16gb-memory-512gb-ssd-misty-grey/JJGGLQWW84/sku/6603654"
+    seller: Best Buy
+    screen_inches: 14
+    declared:
+      cpu: Intel Core Ultra 5 226V
+      ram: 16GB
+      storage: 512GB SSD
+      os: Windows 11 Pro
+      device_type: laptop
+      form_factor: clamshell
+
+  - sku: "12251856"
+    brand: HP
+    model_name: EliteBook 8 G1i 16
+    title: "HP - EliteBook 16\" Touchscreen Laptop - Intel Core Ultra 5 226V with 16GB Memory - 512GB SSD - Glacier Silver"
+    url: "https://www.bestbuy.com/product/hp-elitebook-16-touchscreen-laptop-intel-core-ultra-5-226v-with-16gb-memory-512gb-ssd-glacier-silver/JJGH2GZ4CY/sku/12251856"
+    seller: EP Holdings (marketplace)
+    screen_inches: 16
+    declared:
+      cpu: Intel Core Ultra 5 226V
+      ram: 16GB
+      storage: 512GB SSD
+      os: Windows 11 Pro
+      device_type: laptop
+      form_factor: clamshell
+
+  # Tracked but deliberately outside the comparison group: this unit ships with
+  # Windows 11 Home rather than Pro, so the equivalence rule assigns it a
+  # different key. Kept in the set as a worked example of the rule declining to
+  # group two machines a keyword search would have treated as identical.
+  - sku: "12349089"
+    brand: HP
+    model_name: OmniBook 7 Flip 16
+    title: "HP - OmniBook 7 Laptop Computer 16\" FHD+ Touch Screen Intel Core Ultra 5 226V 16 GB - Glacier silver aluminum"
+    url: "https://www.bestbuy.com/product/hp-omnibook-7-laptop-computer-16-fhd-touch-screen-intel-core-ultra-5-226v-16-gb-glacier-silver-aluminum/JJG6573G9Q/sku/12349089"
+    seller: IST Computers (marketplace)
+    screen_inches: 16
+    declared:
+      cpu: Intel Core Ultra 5 226V
+      ram: 16GB
+      storage: 512GB SSD
+      os: Windows 11 Home
+      device_type: laptop
+      # The product description states a 360-degree hinge with four modes, but
+      # the Best Buy listing title says only "Laptop Computer". Declared as
+      # clamshell to match the title the parser sees; see EXPLANATION.md.
+      form_factor: clamshell
+
+  - sku: "10986558"
+    brand: HP
+    model_name: OmniBook 2-in-1 16
+    title: "HP - Upgraded - OmniBook 2-in-1 Laptop 16.0 WUXGA Display (Intel Ultra 5-226v, 16GB LPDDR5X, 512GB PCIe SSD, Win 11 Pro) - Eclipse Gray"
+    seller: marketplace
+    screen_inches: 16
+    declared:
+      cpu: Intel Core Ultra 5 226V
+      ram: 16GB
+      storage: 512GB SSD
+      os: Windows 11 Pro
+      device_type: laptop
+      form_factor: 2-in-1
+
+  # The listing title says only "Intel Core Ultra 5"; the product description
+  # names the 225U. Best Buy's own Processor Model field reads "Intel Processor
+  # N150", which is wrong for this machine -- see EXPLANATION.md.
+  - sku: "10983183"
+    brand: Lenovo
+    model_name: ThinkBook 14 G5 IAU
+    title: "Lenovo - ThinkBook 14 G5 IAU 21SQ0000US - Intel Core Ultra 5 - 16GB - 512GB SSD - Win 11 Pro - Gray"
+    seller: antonline (marketplace)
+    screen_inches: 14
+    declared:
+      cpu: Intel Core Ultra 5 225U
+      ram: 16GB
+      storage: 512GB SSD
+      os: Windows 11 Pro
+      device_type: laptop
+      form_factor: clamshell
+
+  # Same pattern: description names the 236V, the structured field again reads
+  # "Intel Processor N150".
+  - sku: "12190191"
+    brand: Dell
+    model_name: Pro 14 PA14250
+    title: "Dell - Pro 14 PA14250 - Intel Core Ultra 5 - 16GB - 512GB SSD - Windows 11 Pro - Intel Arc - H0M9C - Magnetite"
+    seller: antonline (marketplace)
+    screen_inches: 14
+    declared:
+      cpu: Intel Core Ultra 5 236V
+      ram: 16GB
+      storage: 512GB SSD
+      os: Windows 11 Pro
+      device_type: laptop
+      form_factor: clamshell

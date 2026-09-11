@@ -1,0 +1,7 @@
+requests>=2.32
+PyYAML>=6.0
+pandas>=2.2
+matplotlib>=3.9
+streamlit>=1.38
+playwright>=1.47   # optional: only needed for the web fallback source
+pytest>=8.3
