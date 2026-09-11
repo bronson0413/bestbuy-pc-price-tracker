@@ -1,0 +1,34 @@
+id,observation_id,sku,rule,severity,detail,raised_at_utc,status,resolved_by,resolved_at_utc,note
+15,,12190191,collection_failed,critical,rapidapi_bestbuy: fetch failed for sku 12190191: rate limited (429) | bestbuy_web: sku 12190191 has no product URL for web fallback | manual_entry: no manual entry for sku 12190191,2026-09-11T16:23:36+00:00,open,,,
+14,,10983183,collection_failed,critical,rapidapi_bestbuy: fetch failed for sku 10983183: rate limited (429) | bestbuy_web: sku 10983183 has no product URL for web fallback | manual_entry: no manual entry for sku 10983183,2026-09-11T16:23:15+00:00,open,,,
+13,,10986558,collection_failed,critical,rapidapi_bestbuy: fetch failed for sku 10986558: rate limited (429) | bestbuy_web: sku 10986558 has no product URL for web fallback | manual_entry: no manual entry for sku 10986558,2026-09-11T16:22:53+00:00,open,,,
+10,,6603654,collection_failed,critical,manual_entry: no manual entry for sku 6603654,2026-09-11T11:51:30+00:00,open,,,
+11,,12251856,collection_failed,critical,manual_entry: no manual entry for sku 12251856,2026-09-11T11:51:30+00:00,open,,,
+12,,12349089,collection_failed,critical,manual_entry: no manual entry for sku 12349089,2026-09-11T11:51:30+00:00,open,,,
+7,,6603654,collection_failed,critical,manual_entry: no manual entry for sku 6603654,2026-09-11T11:50:53+00:00,open,,,
+8,,12251856,collection_failed,critical,manual_entry: no manual entry for sku 12251856,2026-09-11T11:50:53+00:00,open,,,
+9,,12349089,collection_failed,critical,manual_entry: no manual entry for sku 12349089,2026-09-11T11:50:53+00:00,open,,,
+6,,12349089,collection_failed,critical,"bestbuy_web: could not load page for sku 12349089: Page.goto: Timeout 60000ms exceeded.
+Call log:
+  - navigating to ""https://www.bestbuy.com/product/hp-omnibook-7-laptop-computer-16-fhd-touch-screen-intel-core-ultra-5-226v-16-gb-glacier-silver-aluminum/JJG6573G9Q/sku/12349089"", waiting until ""domcontentloaded""
+",2026-09-11T11:37:13+00:00,open,,,
+5,,12251856,collection_failed,critical,"bestbuy_web: could not load page for sku 12251856: Page.goto: Timeout 60000ms exceeded.
+Call log:
+  - navigating to ""https://www.bestbuy.com/product/hp-elitebook-16-touchscreen-laptop-intel-core-ultra-5-226v-with-16gb-memory-512gb-ssd-glacier-silver/JJGH2GZ4CY/sku/12251856"", waiting until ""domcontentloaded""
+",2026-09-11T11:35:03+00:00,open,,,
+4,,6603654,collection_failed,critical,"bestbuy_web: could not load page for sku 6603654: Page.goto: Timeout 60000ms exceeded.
+Call log:
+  - navigating to ""https://www.bestbuy.com/product/asus-expertbook-p5-2-5k-laptop-copilot-pc-intel-core-ultra-5-226v-with-16gb-memory-512gb-ssd-misty-grey/JJGGLQWW84/sku/6603654"", waiting until ""domcontentloaded""
+",2026-09-11T11:32:53+00:00,open,,,
+3,,12349089,collection_failed,critical,"bestbuy_web: unexpected Error: Page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.bestbuy.com/product/hp-omnibook-7-laptop-computer-16-fhd-touch-screen-intel-core-ultra-5-226v-16-gb-glacier-silver-aluminum/JJG6573G9Q/sku/12349089
+Call log:
+  - navigating to ""https://www.bestbuy.com/product/hp-omnibook-7-laptop-computer-16-fhd-touch-screen-intel-core-ultra-5-226v-16-gb-glacier-silver-aluminum/JJG6573G9Q/sku/12349089"", waiting until ""domcontentloaded""
+",2026-09-11T11:29:07+00:00,open,,,
+2,,12251856,collection_failed,critical,"bestbuy_web: unexpected Error: Page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.bestbuy.com/product/hp-elitebook-16-touchscreen-laptop-intel-core-ultra-5-226v-with-16gb-memory-512gb-ssd-glacier-silver/JJGH2GZ4CY/sku/12251856
+Call log:
+  - navigating to ""https://www.bestbuy.com/product/hp-elitebook-16-touchscreen-laptop-intel-core-ultra-5-226v-with-16gb-memory-512gb-ssd-glacier-silver/JJGH2GZ4CY/sku/12251856"", waiting until ""domcontentloaded""
+",2026-09-11T11:29:06+00:00,open,,,
+1,,6603654,collection_failed,critical,"bestbuy_web: unexpected Error: Page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.bestbuy.com/product/asus-expertbook-p5-2-5k-laptop-copilot-pc-intel-core-ultra-5-226v-with-16gb-memory-512gb-ssd-misty-grey/JJGGLQWW84/sku/6603654
+Call log:
+  - navigating to ""https://www.bestbuy.com/product/asus-expertbook-p5-2-5k-laptop-copilot-pc-intel-core-ultra-5-226v-with-16gb-memory-512gb-ssd-misty-grey/JJGGLQWW84/sku/6603654"", waiting until ""domcontentloaded""
+",2026-09-11T11:29:05+00:00,open,,,

@@ -1,0 +1,7 @@
+sku,product,group_key,snapshots,first_usd,latest_usd,min_usd,max_usd,change_usd,change_pct
+10983183,Lenovo ThinkBook 14 G5 IAU,intel-ultra5-225u|16gb|512gb|windows-11-pro|laptop|clamshell,1,1604.95,1604.95,1604.95,1604.95,0.0,0.0
+12349089,HP OmniBook 7 Flip 16,intel-ultra5-226v|16gb|512gb|windows-11-home|laptop|clamshell,3,849.99,849.99,849.99,849.99,0.0,0.0
+6603654,ASUS ExpertBook P5 2.5K,intel-ultra5-226v|16gb|512gb|windows-11-pro|laptop|clamshell,4,1199.99,1199.99,1199.99,1199.99,0.0,0.0
+12251856,HP EliteBook 8 G1i 16,intel-ultra5-226v|16gb|512gb|windows-11-pro|laptop|clamshell,4,1678.49,1678.49,1678.49,1678.49,0.0,0.0
+10986558,HP OmniBook 2-in-1 16,intel-ultra5-226v|16gb|512gb|windows-11-pro|laptop|convertible,1,781.24,781.24,781.24,781.24,0.0,0.0
+12190191,Dell Pro 14 PA14250,intel-ultra5-236v|16gb|512gb|windows-11-pro|laptop|clamshell,1,1914.24,1914.24,1914.24,1914.24,0.0,0.0
