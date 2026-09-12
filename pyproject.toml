@@ -32,6 +32,10 @@ ignore = [
 "tools/*" = ["T201"]
 
 [tool.mypy]
+# Deliberately not pinning python_version: mypy then assumes the interpreter it
+# runs under. Pinning 3.11 while CI runs 3.12 makes mypy reject third-party
+# stubs that use 3.12 syntax, which is a version mismatch rather than a real
+# type error in this project.
 files = ["src", "tests", "tools"]
 warn_unused_configs = true
 warn_redundant_casts = true
@@ -41,7 +45,7 @@ check_untyped_defs = true
 # Third-party packages without stubs. Typing our own code is the point; typing
 # pandas internals is not.
 [[tool.mypy.overrides]]
-module = ["pandas.*", "matplotlib.*", "playwright.*", "yaml.*"]
+module = ["pandas.*", "matplotlib.*", "playwright.*", "yaml.*", "numpy.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

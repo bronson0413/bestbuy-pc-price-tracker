@@ -1,0 +1,164 @@
+# Ground truth for specification extraction.
+#
+# Every entry was verified by opening the Best Buy product page and reading the
+# specification table and description. Where the retailer's own structured
+# field contradicts its description, the description was taken as correct and
+# the contradiction is recorded -- see `retailer_field_says`.
+#
+# This file is the measuring stick. It is written by hand and never generated,
+# because a benchmark produced by the system it measures is not a benchmark.
+
+meta:
+  verified_by: Bo-Sheng Chen
+  verified_on: 2026-09-12
+  method: >
+    Each product page opened directly; processor model, memory, storage,
+    operating system and hinge type read from the description and the
+    specification table. Discrepancies between the two are noted per case.
+
+cases:
+  # --- Titles that state everything -----------------------------------------
+  - id: asus-p5-full
+    sku: "6603654"
+    difficulty: easy
+    title: "ASUS - ExpertBook P5 2.5K Laptop - Copilot+ PC - Intel Core Ultra 5 226V with 16GB Memory - 512GB SSD - Misty Grey"
+    description: >
+      Say hello to ASUS ExpertBook P5. Intel Core Ultra 5 Processor 226V with
+      Intel AI Boost NPU offering up to 40 TOPS. 14-inch 2.5K display.
+      Lightning-fast 512 GB SSD storage, 16 GB of 8448 MHz LPDDR5X RAM.
+      Windows 11 Pro.
+    expected:
+      cpu: intel-ultra5-226v
+      ram_gb: 16
+      storage_gb: 512
+      os: windows-11-pro
+      device_type: laptop
+      form_factor: clamshell
+
+  - id: hp-elitebook-full
+    sku: "12251856"
+    difficulty: easy
+    title: 'HP - EliteBook 16" Touchscreen Laptop - Intel Core Ultra 5 226V with 16GB Memory - 512GB SSD - Glacier Silver'
+    description: >
+      Windows 11 Pro operating system. 16" IPS touch display with 1920 x 1200
+      resolution. Intel Core Ultra 5 226V processor. 512GB solid state drive
+      storage. 16GB LPDDR5X memory.
+    expected:
+      cpu: intel-ultra5-226v
+      ram_gb: 16
+      storage_gb: 512
+      os: windows-11-pro
+      device_type: laptop
+      form_factor: clamshell
+
+  # --- The title omits the processor model; the description has it -----------
+  - id: lenovo-thinkbook-suffix-in-description
+    sku: "10983183"
+    difficulty: hard
+    retailer_field_says: "Intel Processor N150"   # wrong on the live page
+    title: "Lenovo - ThinkBook 14 G5 IAU 21SQ0000US - Intel Core Ultra 5 - 16GB - 512GB SSD - Win 11 Pro - Gray"
+    description: >
+      Lenovo ThinkBook 14 G5 IAU 21SQ0000US 14" Touchscreen Notebook - Intel
+      Core Ultra 5 225U - 16 GB - 512 GB SSD - Windows 11 Pro - Webcam -
+      Wi-Fi 6E. High-Speed Memory and Storage: 16GB DDR5 Memory / 512GB SSD.
+    expected:
+      cpu: intel-ultra5-225u
+      ram_gb: 16
+      storage_gb: 512
+      os: windows-11-pro
+      device_type: laptop
+      form_factor: clamshell
+
+  - id: dell-pro14-suffix-in-description
+    sku: "12190191"
+    difficulty: hard
+    retailer_field_says: "Intel Processor N150"   # wrong on the live page
+    title: "Dell - Pro 14 PA14250 - Intel Core Ultra 5 - 16GB - 512GB SSD - Windows 11 Pro - Intel Arc - H0M9C - Magnetite"
+    description: >
+      Dell Pro 14 Premium PA14250 14" Copilot+ PC Notebook - Intel Core Ultra 5
+      236V - 16 GB - 512 GB SSD - Windows 11 Pro - Intel Arc Graphics - Webcam.
+      High-Capacity Storage and RAM: 16GB Memory / 512 GB SSD. Non-Touch Screen.
+    expected:
+      cpu: intel-ultra5-236v
+      ram_gb: 16
+      storage_gb: 512
+      os: windows-11-pro
+      device_type: laptop
+      form_factor: clamshell
+
+  # --- The title says laptop; the machine is a convertible -------------------
+  - id: hp-omnibook7-hinge-in-description
+    sku: "12349089"
+    difficulty: hard
+    title: 'HP - OmniBook 7 Laptop Computer 16" FHD+ Touch Screen Intel Core Ultra 5 226V 16 GB - Glacier silver aluminum'
+    description: >
+      The Thin and Light OmniBook 7 Flip 16. Boasting a versatile 360-degree
+      hinge, this device offers ultimate flexibility with four intuitive modes:
+      Laptop mode for daily computing, Yoga mode for seamless sharing, Flip
+      convertible mode for immersive binge-watching, and Tablet spin mode.
+      Intel Core Ultra 5 226V processor, 16GB LPDDR5x-8533 MT/s RAM and a 512GB
+      PCIe SSD. Running on Windows 11 Home 64-bit.
+    expected:
+      cpu: intel-ultra5-226v
+      ram_gb: 16
+      storage_gb: 512
+      os: windows-11-home
+      device_type: laptop
+      form_factor: convertible
+
+  - id: hp-omnibook-2in1-pro
+    sku: "10986558"
+    difficulty: medium
+    title: "HP - Upgraded - OmniBook 2-in-1 Laptop 16.0 WUXGA Display (Intel Ultra 5-226v, 16GB LPDDR5X, 512GB PCIe SSD, Win 11 Pro) - Eclipse Gray"
+    description: >
+      HP OmniBook X Flip. Touchscreen, AI powered, backlit keyboard, IPS super
+      clear display, Wi-Fi 6E, Copilot. Intel Core Ultra 5 processor.
+    expected:
+      cpu: intel-ultra5-226v
+      ram_gb: 16
+      storage_gb: 512
+      os: windows-11-pro
+      device_type: laptop
+      form_factor: convertible
+
+  # --- Cases the extractor must decline rather than guess --------------------
+  - id: storage-only-no-memory
+    difficulty: trap
+    title: "Generic - 14 inch Laptop - Intel Core Ultra 5 226V - 512GB SSD - Windows 11 Home"
+    description: "A laptop with a 512GB solid state drive."
+    note: Memory is never stated. Reading 512 as memory is the failure to catch.
+    expected:
+      cpu: intel-ultra5-226v
+      ram_gb: null
+      storage_gb: 512
+      os: windows-11-home
+      device_type: laptop
+      form_factor: clamshell
+
+  - id: unstated-processor-model
+    difficulty: trap
+    title: "Acme - UltraBook 14 - Intel Core Ultra 5 - 16GB - 512GB SSD - Windows 11 Home"
+    description: "A thin and light notebook with an Intel Core Ultra 5 processor."
+    note: >
+      No model suffix anywhere. The correct answer is null. Inventing a
+      plausible suffix such as 226V is the failure this case exists to catch.
+    expected:
+      cpu: null
+      ram_gb: 16
+      storage_gb: 512
+      os: windows-11-home
+      device_type: laptop
+      form_factor: clamshell
+
+  - id: terabyte-conversion
+    difficulty: medium
+    title: "Acme - Studio 16 Laptop - AMD Ryzen AI 9 365 - 32GB - 1TB SSD - Windows 11 Pro"
+    description: "32GB of LPDDR5X memory and a 1TB PCIe Gen4 SSD."
+    note: 1TB must become 1024, not 1.
+    expected:
+      cpu: amd-ryzenai9-365
+      ram_gb: 32
+      storage_gb: 1024
+      os: windows-11-pro
+      device_type: laptop
+      form_factor: clamshell

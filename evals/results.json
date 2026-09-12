@@ -1,0 +1,137 @@
+{
+  "rules": {
+    "name": "Rules only (title)",
+    "per_field": {
+      "cpu": {
+        "correct": 6,
+        "wrong": 0,
+        "missed": 3,
+        "hallucinated": 0
+      },
+      "ram_gb": {
+        "correct": 9,
+        "wrong": 0,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "storage_gb": {
+        "correct": 8,
+        "wrong": 0,
+        "missed": 1,
+        "hallucinated": 0
+      },
+      "os": {
+        "correct": 6,
+        "wrong": 0,
+        "missed": 3,
+        "hallucinated": 0
+      },
+      "device_type": {
+        "correct": 6,
+        "wrong": 0,
+        "missed": 3,
+        "hallucinated": 0
+      },
+      "form_factor": {
+        "correct": 5,
+        "wrong": 1,
+        "missed": 3,
+        "hallucinated": 0
+      }
+    },
+    "complete_specs": 2,
+    "cases": 9,
+    "latency_s": 0.0,
+    "errors": []
+  },
+  "llm": {
+    "name": "LLM only (title + description)",
+    "per_field": {
+      "cpu": {
+        "correct": 9,
+        "wrong": 0,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "ram_gb": {
+        "correct": 9,
+        "wrong": 0,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "storage_gb": {
+        "correct": 8,
+        "wrong": 1,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "os": {
+        "correct": 9,
+        "wrong": 0,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "device_type": {
+        "correct": 9,
+        "wrong": 0,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "form_factor": {
+        "correct": 8,
+        "wrong": 0,
+        "missed": 1,
+        "hallucinated": 0
+      }
+    },
+    "complete_specs": 7,
+    "cases": 9,
+    "latency_s": 10.449000000000524,
+    "errors": []
+  },
+  "hybrid": {
+    "name": "Rules + LLM reconciled",
+    "per_field": {
+      "cpu": {
+        "correct": 9,
+        "wrong": 0,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "ram_gb": {
+        "correct": 9,
+        "wrong": 0,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "storage_gb": {
+        "correct": 9,
+        "wrong": 0,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "os": {
+        "correct": 9,
+        "wrong": 0,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "device_type": {
+        "correct": 9,
+        "wrong": 0,
+        "missed": 0,
+        "hallucinated": 0
+      },
+      "form_factor": {
+        "correct": 8,
+        "wrong": 1,
+        "missed": 0,
+        "hallucinated": 0
+      }
+    },
+    "complete_specs": 8,
+    "cases": 9,
+    "latency_s": 10.449000000000524,
+    "errors": []
+  }
+}

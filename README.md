@@ -63,6 +63,89 @@ python -m tracker.report               # write charts + CSV into reports/
 streamlit run app.py                   # interactive tracker
 ```
 
+## Language-model components
+
+The model reads what the rules cannot: two tracked listings state their
+processor only in the description, and one describes a 360-degree hinge in prose
+while its title says "Laptop Computer". Regular expressions cannot reach that
+text; a model can.
+
+It is constrained rather than trusted:
+
+- every field it returns is re-normalised through `normalize.py`, so it cannot
+  introduce a token the deterministic layer would not have produced
+- where the rules already read a value, a conflicting model value never wins --
+  the disagreement is raised as a critical flag instead
+- low-confidence output is discarded before comparison
+
+### Tool calling
+
+The application includes an assistant that answers questions about the tracked
+data. It does not generate numbers: it selects from five query functions
+(`list_products`, `compare_group`, `price_history`, `find_movers`,
+`open_flags`), and every argument is schema-validated before anything touches
+the database. A malformed call is returned to the model as an error rather than
+repaired, and the tool calls are displayed alongside the answer so a reader can
+check the query that produced it. An answer reached without a successful query
+is labelled unverified.
+
+### Retrieval-augmented answering
+
+Price questions decompose into queries; product questions do not. "Which of
+these has a 360-degree hinge" is answered from prose, so those questions go
+through retrieval instead: passages are selected from
+`config/descriptions.yaml`, and the model is told it may use nothing else.
+
+Two properties are enforced in code rather than asked for in the prompt:
+
+- when retrieval finds no relevant passage, **the model is not called at all** —
+  the cheapest place to refuse is before generation
+- citations in the answer are checked against the passage ids actually
+  supplied; an invented id is reported rather than shown as a source
+
+Retrieval is BM25, not embeddings. Six products yield twenty-three passages; a
+vector store for that would be architecture as decoration, and lexical matching
+has the advantage of showing *which term* matched. The trade-off is real and is
+pinned by a test: BM25 cannot distinguish "Wi-Fi 7" from "Wi-Fi 6E", because
+both share the token `wi-fi`. Swapping the scorer for embeddings touches one
+class.
+
+### Measure it before believing it
+
+```bash
+export GEMINI_API_KEY=your_key_here
+python tools/run_eval.py --llm     # scores rules, model and hybrid on evals/goldset.yaml
+python tools/run_eval.py           # rules baseline only, no API calls
+```
+
+`evals/goldset.yaml` is hand-verified against live product pages and includes
+trap cases where the correct answer is "not stated" — inventing a plausible
+value there is scored as a hallucination, not as a miss.
+
+### Flag explanation
+
+A flag reading `price_jump_critical: -42%` is accurate and nearly useless — a
+reviewer still has to work out what happened. The explainer drafts the first
+five minutes of that investigation: it is given the flag, the registered
+configuration, the current listing title and the price history, and proposes
+what may have occurred together with what would confirm or refute each
+possibility.
+
+It resolves nothing. The flag's status is untouched, the output is labelled as
+model-generated, and malformed hypotheses are dropped rather than repaired.
+
+## Collection health
+
+`src/tracker/health.py` reports what the tracker knows about its own
+reliability: which sources produced which observations, the success rate of
+each run, and — grouped by cause rather than by product — why collection
+failed. Error strings carry SKUs and timings that differ every time, so they
+are collapsed to their cause; that is what turns a list of failures into a
+diagnosis.
+
+The failure record from this project's own degradation path is retained rather
+than cleared, because it is the evidence for the four-tier source design.
+
 ## Quality checks
 
 ```bash
@@ -72,7 +155,7 @@ pre-commit install          # lint, format and type-check before every commit
 ruff check src tests tools  # lint
 ruff format src tests tools # format
 mypy src                    # type check
-pytest --cov                # 61 tests, 81% line coverage
+pytest --cov                # 138 tests, 79% line coverage
 python tools/check_grouping.py   # the configured products still group correctly
 python tools/selftest.py    # end-to-end run on synthetic, watermarked data
 ```

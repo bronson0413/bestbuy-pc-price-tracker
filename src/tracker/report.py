@@ -21,7 +21,8 @@ def load_frame(db_path: Path | str = st.DEFAULT_DB) -> pd.DataFrame:
     with st.connect(db_path) as conn:
         df = pd.read_sql_query(
             """SELECT o.id, o.sku, o.captured_at_utc, o.price_usd, o.regular_price_usd,
-                      o.source_method, p.brand, p.model_name, p.group_key, p.tier_key, p.url
+                      o.source_method, o.on_sale, p.brand, p.model_name,
+                      p.group_key, p.tier_key, p.url
                FROM observations o JOIN products p ON p.sku = o.sku
                WHERE o.price_usd IS NOT NULL
                ORDER BY o.captured_at_utc""",
@@ -92,6 +93,24 @@ def plot_group(
         raise ValueError(f"no observations for group {group_key}")
 
     fig, ax = plt.subplots(figsize=(10, 5.6), dpi=160)
+
+    # The band between the cheapest and dearest machine at each moment. It is
+    # the quantity a shopper actually cares about -- how much the same
+    # configuration varies by brand -- and a line chart alone hides it.
+    band = sub.pivot_table(
+        index="captured_at_utc", columns="label", values="price_usd", aggfunc="last"
+    ).sort_index()
+    if band.shape[1] > 1:
+        ax.fill_between(
+            band.index,
+            band.min(axis=1),
+            band.max(axis=1),
+            color="#1B3A6B",
+            alpha=0.06,
+            zorder=0,
+            label="_spread",
+        )
+
     for i, (label, g) in enumerate(sub.groupby("label")):
         g = g.sort_values("captured_at_utc")
         colour = PALETTE[i % len(PALETTE)]
@@ -103,7 +122,23 @@ def plot_group(
             linewidth=1.9,
             color=colour,
             label=label,
+            zorder=3,
         )
+        # Observations the retailer flagged as discounted, marked so a dip can
+        # be read as a promotion rather than mistaken for a listing change.
+        if "on_sale" in g.columns:
+            promo = g[g["on_sale"] == 1]
+            if not promo.empty:
+                ax.scatter(
+                    promo["captured_at_utc"],
+                    promo["price_usd"],
+                    s=110,
+                    facecolors="none",
+                    edgecolors=colour,
+                    linewidths=1.6,
+                    zorder=4,
+                    label="_promo",
+                )
         ax.annotate(
             f"${g['price_usd'].iloc[-1]:,.0f}",
             (g["captured_at_utc"].iloc[-1], g["price_usd"].iloc[-1]),
@@ -120,10 +155,19 @@ def plot_group(
         pad=22,
         loc="left",
     )
+    latest = sub.sort_values("captured_at_utc").groupby("label")["price_usd"].last()
+    subtitle = humanize_group(group_key)
+    if len(latest) > 1:
+        spread = latest.max() - latest.min()
+        premium = spread / latest.min() * 100
+        subtitle += (
+            f"    ·    spread ${spread:,.0f} "
+            f"({premium:.0f}% premium, {latest.idxmax()} over {latest.idxmin()})"
+        )
     ax.text(
         0,
         1.03,
-        humanize_group(group_key),
+        subtitle,
         transform=ax.transAxes,
         fontsize=9,
         color="#555555",
@@ -145,6 +189,14 @@ def plot_group(
         ncol=ncol,
     )
     span = sub["captured_at_utc"]
+    notes = []
+    if band.shape[1] > 1:
+        notes.append("shaded band: spread across the group")
+    if "on_sale" in sub.columns and (sub["on_sale"] == 1).any():
+        notes.append("ringed points: retailer-flagged promotion")
+    if notes:
+        fig.text(0.01, -0.055, "   ·   ".join(notes), fontsize=7.5, color="#777777")
+
     fig.text(
         0.01,
         -0.02,
@@ -168,6 +220,108 @@ def plot_group(
             weight="bold",
         )
     fig.tight_layout(rect=(0, 0.06, 1, 1))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+    return out_path
+
+
+def group_comparison(df: pd.DataFrame, key_col: str = "tier_key") -> pd.DataFrame:
+    """Latest price per product, grouped, for cross-group comparison.
+
+    A price tracker that only says what things cost stops one question short of
+    useful. This frames the next one: given two configurations, what does the
+    difference between them actually cost on the shelf?
+    """
+    if df.empty:
+        return df
+    latest = (
+        df.sort_values("captured_at_utc")
+        .groupby(["sku", "label", key_col], as_index=False)
+        .last()
+    )
+    return latest[latest[key_col] != "unmatched"]
+
+
+def plot_group_premium(
+    df: pd.DataFrame, out_path: Path, key_col: str = "tier_key"
+) -> Path:
+    """Price distribution per equivalence group, one row per group.
+
+    Deliberately a strip plot rather than a box plot: with two to four machines
+    per group, a box plot draws quartiles from a sample too small to have them,
+    which is a chart that implies more than the data supports.
+    """
+    latest = group_comparison(df, key_col)
+    if latest.empty or key_col not in latest.columns:
+        raise ValueError("no groups with a price to compare")
+    groups = [g for g, members in latest.groupby(key_col) if len(members) >= 1]
+    if not groups:
+        raise ValueError("no groups with a price to compare")
+
+    groups = sorted(
+        groups, key=lambda g: latest[latest[key_col] == g]["price_usd"].min()
+    )
+    height = max(2.6, 0.9 * len(groups) + 1.6)
+    fig, ax = plt.subplots(figsize=(10, height), dpi=160)
+
+    for row, group in enumerate(groups):
+        members = latest[latest[key_col] == group].sort_values("price_usd")
+        prices = members["price_usd"].tolist()
+        if len(prices) > 1:
+            ax.plot(
+                [min(prices), max(prices)],
+                [row, row],
+                color="#CBD5E1",
+                linewidth=6,
+                solid_capstyle="round",
+                zorder=1,
+            )
+        for i, (_, product) in enumerate(members.iterrows()):
+            colour = PALETTE[i % len(PALETTE)]
+            ax.scatter(product["price_usd"], row, s=70, color=colour, zorder=3)
+            ax.annotate(
+                product["brand"],
+                (product["price_usd"], row),
+                textcoords="offset points",
+                xytext=(0, 9),
+                ha="center",
+                fontsize=8,
+                color=colour,
+            )
+        if len(prices) > 1:
+            ax.annotate(
+                f"${max(prices) - min(prices):,.0f} spread",
+                (max(prices), row),
+                textcoords="offset points",
+                xytext=(12, -3),
+                fontsize=8,
+                color="#555555",
+            )
+
+    ax.set_yticks(range(len(groups)))
+    ax.set_yticklabels([humanize_group(g) for g in groups], fontsize=8)
+    ax.set_xlabel("Latest price (USD)")
+    ax.xaxis.set_major_formatter(lambda v, _: f"${v:,.0f}")
+    ax.set_title(
+        "What the same configuration costs, by equivalence group",
+        fontsize=13,
+        pad=16,
+        loc="left",
+    )
+    ax.grid(axis="x", alpha=0.25, linewidth=0.7)
+    for spine in ("top", "right", "left"):
+        ax.spines[spine].set_visible(False)
+    ax.margins(x=0.12, y=0.25)
+    fig.text(
+        0.01,
+        0.01,
+        "One point per product; the bar spans the group. Groups with a "
+        "single member show no spread because there is nothing to compare.",
+        fontsize=7.5,
+        color="#777777",
+    )
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, bbox_inches="tight")
     plt.close(fig)
@@ -200,6 +354,12 @@ def main(argv: list[str] | None = None) -> int:
             safe = key.replace("|", "_")
             path = plot_group(df, key, args.outdir / f"trend_{tag}_{safe}.png", col=col)
             print(f"wrote {path}")
+    try:
+        path = plot_group_premium(df, args.outdir / "group_premium.png")
+        print(f"wrote {path}")
+    except ValueError as exc:
+        print(f"skipped group comparison: {exc}")
+
     print(f"wrote {args.outdir / 'observations.csv'}, {args.outdir / 'summary.csv'}")
     return 0
 

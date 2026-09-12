@@ -6,3 +6,4 @@ __pycache__/
 
 # Personal study notes, not part of the submission
 docs/DESIGN_NOTES.md
+docs/*_zh.md

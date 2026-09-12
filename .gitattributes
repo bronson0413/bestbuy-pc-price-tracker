@@ -1,3 +1,5 @@
+# Normalise line endings so that a file edited on Windows does not fail the
+# formatter check on a Linux CI runner.
 * text=auto eol=lf
 *.png binary
 *.sqlite binary

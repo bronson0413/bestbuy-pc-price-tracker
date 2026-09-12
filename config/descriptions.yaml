@@ -1,0 +1,83 @@
+# Long-form product text for retrieval.
+#
+# Copied from the "About this product" and "Features" sections of each Best Buy
+# product page on 2026-09-12. Kept separate from products.yaml because the
+# collector does not need it and it changes for different reasons: the tracked
+# configuration is a decision, this is source material.
+#
+# Only what the page states. Nothing summarised, nothing added.
+
+descriptions:
+  "6603654": >
+    Say hello to ASUS ExpertBook P5, a revolutionary leap in AI PC for work.
+    Engineered for the future of productivity, ExpertBook P5 harnesses the power
+    of Intel Core Ultra processors (series 2). Starting at a feather-light 2.84
+    lbs and wrapped in a military-grade durable, premium aluminium chassis, it
+    has a slim-bezel 2.5K 144 Hz anti-glare display. The 14-inch 2.5K
+    (2560 x 1600) display has a 144Hz refresh rate and 100% sRGB colour gamut.
+    Intel Core Ultra 5 Processor 226V with Intel AI Boost NPU offers up to 40
+    TOPS, with Intel Arc 140V Graphics. Storage is a 512 GB SSD with 16 GB of
+    8448 MHz LPDDR5X RAM and Wi-Fi 6E. The chassis is 0.65 inches thin.
+    Security features include a fingerprint sensor integrated with the power
+    key, a TPM 2.0 chip, a Kensington Nano Security Slot, an FHD IR camera with
+    Windows Hello support, and a webcam privacy shield. Connectivity is 1x HDMI
+    2.1, 1x 3.5mm combo audio jack, 1x RJ45 Gigabit Ethernet, 2x USB 3.2 Gen 2
+    Type-A and 2x Thunderbolt 4 supporting display and power delivery. It is
+    engineered to meet the MIL-STD 810H US Military standard. It carries a
+    3-year warranty with 1 year of ASUS Accidental Damage Protection. It has
+    2-way AI noise-cancelling technology and an AI-powered camera with
+    motion-tracking. There is no touch screen.
+
+  "12251856": >
+    The HP EliteBook 8 G1i 16-inch Next Gen AI PC is designed for strategic
+    work, with the latest Intel Core Ultra processor and a 48 TOPS NPU. It runs
+    the Windows 11 Pro operating system. The 16-inch IPS touch display has
+    1920 x 1200 (WUXGA) resolution with 300 nits brightness, anti-glare and
+    ambient light sensors for outdoor viewing. It has an Intel Core Ultra 5 226V
+    processor with Intel Arc integrated graphics, a 512GB solid state drive and
+    16GB LPDDR5X memory. Ports are 2 Thunderbolt 4 with USB-C 40Gbps, 1 USB-C
+    10Gbps, 1 HDMI 2.1, 1 audio combo jack and 1 powered USB-A 5Gbps. Wireless
+    options include Wi-Fi 7 and Bluetooth. The battery is an HP Long Life
+    3-cell, 62Whr Li-ion polymer. It has a 5MP built-in webcam with microphone,
+    a backlit keyboard with numpad, a dedicated Copilot key, a fingerprint
+    reader and a security lock slot.
+
+  "12349089": >
+    The Thin and Light OmniBook 7 Flip 16 is the AI-enhanced next generation of
+    HP Envy x360 and Spectre x360, delivering up to 10 hours of battery life
+    with rapid charging. It has a versatile 360-degree hinge offering four
+    intuitive modes: Laptop mode for everyday computing, Yoga mode for sharing,
+    Flip convertible mode for watching, and Tablet spin mode. It includes an HP
+    USB-C rechargeable MPP2.0 stylus with 4096 levels of pressure sensitivity.
+    It is powered by the Intel Core Ultra 5 226V processor (8 cores, 8 threads,
+    up to 4.5 GHz) with a dedicated 40 TOPS NPU, 16GB LPDDR5x-8533 MT/s RAM and
+    a 512GB PCIe SSD. The Intel Arc 130V GPU can access up to 8GB of system
+    memory. The 16-inch WUXGA (1920x1200) touchscreen uses IPS technology with
+    400 nits of brightness and a micro-edge design, and supports up to three
+    external monitors via HDMI 2.1, USB Type-C and Thunderbolt 4 without a
+    docking station. Connectivity includes Thunderbolt 4, USB-C 3.2 Gen 2, two
+    USB-A 3.2 Gen 2, HDMI 2.1, Wi-Fi 6E and Bluetooth 5.3. The HP 5MP IR camera
+    has temporal noise reduction and secure facial recognition login. The
+    battery is 4-cell, 68 Wh, charging to 50% in 45 minutes with HP Fast Charge.
+    It weighs 3.95 lb. It runs Windows 11 Home 64-bit. Security features include
+    Walk Away Lock, Wake on Approach, auto screen dimming and McAfee Deepfake
+    Detector.
+
+  "10986558": >
+    HP OmniBook 2-in-1 with a 16.0 inch WUXGA display. It has an Intel Ultra
+    5-226v processor, 16GB LPDDR5X memory and a 512GB PCIe SSD, running Windows
+    11 Pro. Features include a touchscreen, backlit keyboard, IPS display,
+    Wi-Fi 6E and Copilot. The colour is Eclipse Gray.
+
+  "10983183": >
+    Lenovo ThinkBook 14 G5 IAU 21SQ0000US is a 14-inch touchscreen notebook with
+    an Intel Core Ultra 5 225U processor, 16 GB of DDR5 memory and a 512 GB SSD.
+    It runs Windows 11 Pro and includes a webcam and Wi-Fi 6E. The display
+    resolution is 1920 x 1080 Full HD. It is sold and shipped by antonline.
+
+  "12190191": >
+    Dell Pro 14 Premium PA14250 is a 14-inch Copilot+ PC notebook with an Intel
+    Core Ultra 5 236V processor, 16 GB of memory and a 512 GB SSD. It runs
+    Windows 11 Pro with Intel Arc Graphics, a webcam and IEEE 802.11be wireless.
+    The display is 1920 x 1200 Full HD+ and is not a touch screen. The colour is
+    Magnetite. It is sold and shipped by antonline.

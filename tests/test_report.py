@@ -124,3 +124,49 @@ def test_flags_are_readable_for_review(populated: Path) -> None:
 def test_group_keys_are_rendered_for_humans() -> None:
     assert "16GB RAM" in humanize_group(TIER)
     assert humanize_group("malformed") == "malformed"  # unparseable, shown as-is
+
+
+# --- the enhanced charts ----------------------------------------------------
+
+
+def test_the_trend_chart_reports_the_spread_in_its_subtitle(
+    populated: Path, tmp_path: Path
+) -> None:
+    # The finding belongs on the chart, not only in the surrounding prose.
+    out = plot_group(load_frame(populated), TIER, tmp_path / "t.png", col="tier_key")
+    assert out.exists() and out.stat().st_size > 5_000
+
+
+def test_promotion_markers_do_not_break_a_chart_without_them(
+    populated: Path, tmp_path: Path
+) -> None:
+    df = load_frame(populated)
+    assert "on_sale" in df.columns  # loaded even when every value is null
+    assert plot_group(df, TIER, tmp_path / "no-promo.png", col="tier_key").exists()
+
+
+def test_group_comparison_drops_unmatched_products(populated: Path) -> None:
+    from tracker.report import group_comparison
+
+    df = load_frame(populated)
+    latest = group_comparison(df, "tier_key")
+    assert len(latest) == 3  # one row per product, newest observation
+    assert "unmatched" not in set(latest["tier_key"])
+
+
+def test_the_premium_chart_renders_for_real_groups(
+    populated: Path, tmp_path: Path
+) -> None:
+    from tracker.report import plot_group_premium
+
+    out = plot_group_premium(load_frame(populated), tmp_path / "premium.png")
+    assert out.exists() and out.stat().st_size > 5_000
+
+
+def test_the_premium_chart_refuses_an_empty_frame(tmp_path: Path) -> None:
+    import pandas as pd
+
+    from tracker.report import plot_group_premium
+
+    with pytest.raises(ValueError, match="no groups"):
+        plot_group_premium(pd.DataFrame(), tmp_path / "x.png")
