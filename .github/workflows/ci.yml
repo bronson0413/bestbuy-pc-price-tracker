@@ -1,0 +1,43 @@
+name: CI
+
+# Separate from the snapshot schedule on purpose: a failing test should never
+# stop price collection, and a collection outage should never look like a
+# broken build.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt ruff mypy pytest-cov types-requests types-PyYAML
+
+      - name: Lint
+        run: ruff check src tests tools
+
+      - name: Format check
+        run: ruff format --check src tests tools
+
+      - name: Type check
+        run: mypy src --ignore-missing-imports
+
+      - name: Test with coverage
+        env:
+          PYTHONPATH: src
+        run: pytest --cov --cov-report=term-missing --cov-fail-under=70
+
+      - name: Equivalence rules still group the tracked products as expected
+        env:
+          PYTHONPATH: src
+        run: python tools/check_grouping.py

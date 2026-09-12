@@ -4,8 +4,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from tracker.normalize import parse_spec
-from tracker.validate import (check_completeness, check_group_size, check_price,
-                              check_spec_drift, check_staleness)
+from tracker.validate import (
+    check_completeness,
+    check_group_size,
+    check_price,
+    check_spec_drift,
+    check_staleness,
+)
 
 HP = 'HP OmniBook X Flip 14" 2-in-1, Intel Core Ultra 5 226V, 16GB RAM, 512GB SSD, Windows 11 Home'
 

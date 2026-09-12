@@ -3,3 +3,6 @@ __pycache__/
 .venv/
 .env
 .streamlit/secrets.toml
+
+# Personal study notes, not part of the submission
+docs/DESIGN_NOTES.md

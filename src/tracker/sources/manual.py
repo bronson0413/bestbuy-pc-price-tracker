@@ -4,6 +4,7 @@ Kept as a first-class source rather than an ad-hoc spreadsheet so that manually
 captured points sit in the same table as automated ones, tagged as manual and
 carrying the name of the person who entered them.
 """
+
 from __future__ import annotations
 
 import csv
@@ -31,8 +32,11 @@ class ManualSource(PriceSource):
         with self.csv_path.open(newline="", encoding="utf-8-sig") as fh:
             rows = []
             for raw in csv.DictReader(fh):
-                row = {(k or "").strip(): (v or "").strip()
-                       for k, v in raw.items() if k is not None}
+                row = {
+                    (k or "").strip(): (v or "").strip()
+                    for k, v in raw.items()
+                    if k is not None
+                }
                 if row.get("sku"):
                     rows.append(row)
             return rows
@@ -46,8 +50,15 @@ class ManualSource(PriceSource):
             price = float(row["price_usd"])
         except (KeyError, ValueError) as exc:
             raise SourceError(f"malformed manual row for sku {sku}") from exc
-        return Quote(sku=sku, price_usd=price, source_method=self.name,
-                     source_url=url, availability=row.get("availability"),
-                     raw={"entered_by": row.get("entered_by", "unknown"),
-                          "screenshot": row.get("screenshot", ""),
-                          "captured_at_utc": row.get("captured_at_utc", "")})
+        return Quote(
+            sku=sku,
+            price_usd=price,
+            source_method=self.name,
+            source_url=url,
+            availability=row.get("availability"),
+            raw={
+                "entered_by": row.get("entered_by", "unknown"),
+                "screenshot": row.get("screenshot", ""),
+                "captured_at_utc": row.get("captured_at_utc", ""),
+            },
+        )

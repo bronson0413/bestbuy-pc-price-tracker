@@ -1,4 +1,5 @@
 """Collection entry point: one run = one dated snapshot per tracked product."""
+
 from __future__ import annotations
 
 import argparse
@@ -10,8 +11,15 @@ import yaml
 from . import COLLECTOR_VERSION
 from . import storage as st
 from .normalize import parse_spec
-from .sources import (BestBuyApiSource, BestBuyWebSource, ManualSource,
-                      Quote, RapidApiSource, SourceError)
+from .sources import (
+    BestBuyApiSource,
+    BestBuyWebSource,
+    ManualSource,
+    PriceSource,
+    Quote,
+    RapidApiSource,
+    SourceError,
+)
 from .validate import check_completeness, check_price, check_spec_drift
 
 
@@ -20,7 +28,7 @@ def load_config(path: Path) -> dict:
         return yaml.safe_load(fh)
 
 
-def build_sources(mode: str) -> list:
+def build_sources(mode: str) -> list[PriceSource]:
     """Order the chain by how directly each source speaks for the retailer.
 
     Official API first when a key exists, then the RapidAPI aggregator, then
@@ -30,8 +38,9 @@ def build_sources(mode: str) -> list:
     api = BestBuyApiSource()
     rapid = RapidApiSource()
     web, manual = BestBuyWebSource(), ManualSource()
-    preferred = [s for s in (api, rapid) if s.available] + [web, manual]
-    chains = {
+    preferred: list[PriceSource] = [s for s in (api, rapid) if s.available]
+    preferred += [web, manual]
+    chains: dict[str, list[PriceSource]] = {
         "auto": preferred,
         "api": [api],
         "rapidapi": [rapid],
@@ -43,7 +52,9 @@ def build_sources(mode: str) -> list:
     return chains[mode]
 
 
-def collect_one(sources: list, sku: str, url: str | None) -> tuple[Quote | None, list[str]]:
+def collect_one(
+    sources: list, sku: str, url: str | None
+) -> tuple[Quote | None, list[str]]:
     """Try each source in order. Returns the first quote plus the failure log."""
     errors: list[str] = []
     for source in sources:
@@ -60,7 +71,10 @@ def run(config_path: Path, db_path: Path, mode: str, dry_run: bool = False) -> i
     cfg = load_config(config_path)
     products = cfg.get("products", [])
     if not products:
-        print("No products configured. Fill in config/products.yaml first.", file=sys.stderr)
+        print(
+            "No products configured. Fill in config/products.yaml first.",
+            file=sys.stderr,
+        )
         return 2
 
     sources = build_sources(mode)
@@ -74,32 +88,52 @@ def run(config_path: Path, db_path: Path, mode: str, dry_run: bool = False) -> i
             sku = str(entry["sku"])
             declared = entry.get("declared", {})
             spec = parse_spec(
-                title=entry.get("title"), cpu=declared.get("cpu"),
-                ram=declared.get("ram"), storage=declared.get("storage"),
-                os_=declared.get("os"), device_type=declared.get("device_type"),
-                form_factor=declared.get("form_factor"))
+                title=entry.get("title"),
+                cpu=declared.get("cpu"),
+                ram=declared.get("ram"),
+                storage=declared.get("storage"),
+                os_=declared.get("os"),
+                device_type=declared.get("device_type"),
+                form_factor=declared.get("form_factor"),
+            )
             group_key = spec.group_key()
             tier_key = spec.tier_key()
 
             quote, errors = collect_one(sources, sku, entry.get("url"))
             st.upsert_product(
-                conn, sku=sku, brand=entry.get("brand", "?"),
+                conn,
+                sku=sku,
+                brand=entry.get("brand", "?"),
                 model_name=entry.get("model_name", entry.get("title", sku)),
                 listing_title=(quote.listing_title if quote else entry.get("title")),
-                url=entry.get("url"), declared=declared,
-                normalized=spec.__dict__, group_key=group_key,
-                tier_key=tier_key)
+                url=entry.get("url"),
+                declared=declared,
+                normalized=spec.__dict__,
+                group_key=group_key,
+                tier_key=tier_key,
+            )
 
             for flag in check_completeness(spec):
-                st.raise_flag(conn, observation_id=None, sku=sku, rule=flag.rule,
-                              severity=flag.severity, detail=flag.detail)
+                st.raise_flag(
+                    conn,
+                    observation_id=None,
+                    sku=sku,
+                    rule=flag.rule,
+                    severity=flag.severity,
+                    detail=flag.detail,
+                )
 
             if quote is None:
                 failed += 1
                 print(f"  [FAIL] {sku}: " + " | ".join(errors))
-                st.raise_flag(conn, observation_id=None, sku=sku,
-                              rule="collection_failed", severity="critical",
-                              detail=" | ".join(errors) or "all sources failed")
+                st.raise_flag(
+                    conn,
+                    observation_id=None,
+                    sku=sku,
+                    rule="collection_failed",
+                    severity="critical",
+                    detail=" | ".join(errors) or "all sources failed",
+                )
                 continue
 
             previous = st.last_observation(conn, sku)
@@ -112,35 +146,55 @@ def run(config_path: Path, db_path: Path, mode: str, dry_run: bool = False) -> i
                 continue
 
             obs_id = st.insert_observation(
-                conn, sku=sku, captured_at_utc=captured, price_usd=quote.price_usd,
-                regular_price_usd=quote.regular_price_usd, on_sale=quote.on_sale,
-                availability=quote.availability, source_method=quote.source_method,
-                source_url=quote.source_url, collector_version=COLLECTOR_VERSION,
-                raw=quote.raw)
+                conn,
+                sku=sku,
+                captured_at_utc=captured,
+                price_usd=quote.price_usd,
+                regular_price_usd=quote.regular_price_usd,
+                on_sale=quote.on_sale,
+                availability=quote.availability,
+                source_method=quote.source_method,
+                source_url=quote.source_url,
+                collector_version=COLLECTOR_VERSION,
+                raw=quote.raw,
+            )
 
             flags = check_price(quote.price_usd, previous=prev_price)
             flags += check_spec_drift(spec, quote.listing_title)
             for flag in flags:
-                st.raise_flag(conn, observation_id=obs_id, sku=sku, rule=flag.rule,
-                              severity=flag.severity, detail=flag.detail)
+                st.raise_flag(
+                    conn,
+                    observation_id=obs_id,
+                    sku=sku,
+                    rule=flag.rule,
+                    severity=flag.severity,
+                    detail=flag.detail,
+                )
 
             succeeded += 1
             marks = "".join("!" for f in flags if f.severity == "critical")
-            print(f"  [ OK ] {sku} ${quote.price_usd:.2f} via {quote.source_method} "
-                  f"[{group_key}] {marks}")
+            print(
+                f"  [ OK ] {sku} ${quote.price_usd:.2f} via {quote.source_method} "
+                f"[{group_key}] {marks}"
+            )
 
-        st.finish_run(conn, run_id, attempted=attempted, succeeded=succeeded,
-                      failed=failed)
+        st.finish_run(
+            conn, run_id, attempted=attempted, succeeded=succeeded, failed=failed
+        )
 
     print(f"\nRun complete: {succeeded}/{attempted} captured, {failed} failed.")
     return 0 if succeeded else 1
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Capture one Best Buy price snapshot per product.")
+    ap = argparse.ArgumentParser(
+        description="Capture one Best Buy price snapshot per product."
+    )
     ap.add_argument("--config", type=Path, default=Path("config/products.yaml"))
     ap.add_argument("--db", type=Path, default=st.DEFAULT_DB)
-    ap.add_argument("--source", default="auto", choices=["auto", "api", "rapidapi", "web", "manual"])
+    ap.add_argument(
+        "--source", default="auto", choices=["auto", "api", "rapidapi", "web", "manual"]
+    )
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
     return run(args.config, args.db, args.source, args.dry_run)

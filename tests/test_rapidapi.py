@@ -4,16 +4,24 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import pytest
+
 from tracker.sources import RapidApiSource, SourceError
 
 OK = {
-    "success": True, "message": "Success", "error": None,
+    "success": True,
+    "message": "Success",
+    "error": None,
     "data": {
-        "customerPrice": 1199.99, "previousPrice": "1,199.99",
-        "isOnSale": False, "hasSavings": False,
+        "customerPrice": 1199.99,
+        "previousPrice": "1,199.99",
+        "isOnSale": False,
+        "hasSavings": False,
         "priceChangeTotalSavingsAmount": 0,
-        "skuDataAnalytics": {"customerPrice": 1199.99,
-                             "pricingType": "regular", "skuId": "6603654"},
+        "skuDataAnalytics": {
+            "customerPrice": 1199.99,
+            "pricingType": "regular",
+            "skuId": "6603654",
+        },
     },
 }
 
@@ -26,7 +34,7 @@ def source():
 def test_parses_price_and_provenance(source):
     q = source._to_quote("6603654", OK, "https://example.invalid")
     assert q.price_usd == 1199.99
-    assert q.regular_price_usd == 1199.99      # comma-formatted string parsed
+    assert q.regular_price_usd == 1199.99  # comma-formatted string parsed
     assert q.on_sale is False
     assert q.source_method == "rapidapi_bestbuy"
 

@@ -1,10 +1,12 @@
 """Static deliverables: trend chart PNG, tidy CSV export, review queue."""
+
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -22,10 +24,14 @@ def load_frame(db_path: Path | str = st.DEFAULT_DB) -> pd.DataFrame:
                       o.source_method, p.brand, p.model_name, p.group_key, p.tier_key, p.url
                FROM observations o JOIN products p ON p.sku = o.sku
                WHERE o.price_usd IS NOT NULL
-               ORDER BY o.captured_at_utc""", conn)
+               ORDER BY o.captured_at_utc""",
+            conn,
+        )
     if df.empty:
         return df
-    df["captured_at_utc"] = pd.to_datetime(df["captured_at_utc"], utc=True, format="mixed")
+    df["captured_at_utc"] = pd.to_datetime(
+        df["captured_at_utc"], utc=True, format="mixed"
+    )
     df["label"] = df["brand"] + " " + df["model_name"]
     return df
 
@@ -33,7 +39,8 @@ def load_frame(db_path: Path | str = st.DEFAULT_DB) -> pd.DataFrame:
 def load_flags(db_path: Path | str = st.DEFAULT_DB) -> pd.DataFrame:
     with st.connect(db_path) as conn:
         return pd.read_sql_query(
-            "SELECT * FROM review_flags ORDER BY raised_at_utc DESC", conn)
+            "SELECT * FROM review_flags ORDER BY raised_at_utc DESC", conn
+        )
 
 
 def price_summary(df: pd.DataFrame, key_col: str = "group_key") -> pd.DataFrame:
@@ -44,13 +51,20 @@ def price_summary(df: pd.DataFrame, key_col: str = "group_key") -> pd.DataFrame:
     for (sku, label), g in df.groupby(["sku", "label"]):
         g = g.sort_values("captured_at_utc")
         first, last = g["price_usd"].iloc[0], g["price_usd"].iloc[-1]
-        rows.append({
-            "sku": sku, "product": label, "group_key": g[key_col].iloc[-1],
-            "snapshots": len(g), "first_usd": first, "latest_usd": last,
-            "min_usd": g["price_usd"].min(), "max_usd": g["price_usd"].max(),
-            "change_usd": last - first,
-            "change_pct": (last - first) / first * 100 if first else float("nan"),
-        })
+        rows.append(
+            {
+                "sku": sku,
+                "product": label,
+                "group_key": g[key_col].iloc[-1],
+                "snapshots": len(g),
+                "first_usd": first,
+                "latest_usd": last,
+                "min_usd": g["price_usd"].min(),
+                "max_usd": g["price_usd"].max(),
+                "change_usd": last - first,
+                "change_pct": (last - first) / first * 100 if first else float("nan"),
+            }
+        )
     return pd.DataFrame(rows).sort_values(["group_key", "latest_usd"])
 
 
@@ -59,12 +73,19 @@ def humanize_group(group_key: str) -> str:
     if len(parts) != 6:
         return group_key
     cpu, ram, storage, os_, device, form = parts
-    return (f"{cpu.replace('-', ' ').title()} · {ram.upper()} RAM · "
-            f"{storage.upper()} SSD · {os_.replace('-', ' ').title()} · {form}")
+    return (
+        f"{cpu.replace('-', ' ').title()} · {ram.upper()} RAM · "
+        f"{storage.upper()} SSD · {os_.replace('-', ' ').title()} · {form}"
+    )
 
 
-def plot_group(df: pd.DataFrame, group_key: str, out_path: Path,
-               watermark: str | None = None, col: str = "group_key") -> Path:
+def plot_group(
+    df: pd.DataFrame,
+    group_key: str,
+    out_path: Path,
+    watermark: str | None = None,
+    col: str = "group_key",
+) -> Path:
     """One chart per equivalence group: price over time, one line per product."""
     sub = df[df[col] == group_key]
     if sub.empty:
@@ -74,17 +95,39 @@ def plot_group(df: pd.DataFrame, group_key: str, out_path: Path,
     for i, (label, g) in enumerate(sub.groupby("label")):
         g = g.sort_values("captured_at_utc")
         colour = PALETTE[i % len(PALETTE)]
-        ax.plot(g["captured_at_utc"], g["price_usd"], marker="o", markersize=4.5,
-                linewidth=1.9, color=colour, label=label)
-        ax.annotate(f"${g['price_usd'].iloc[-1]:,.0f}",
-                    (g["captured_at_utc"].iloc[-1], g["price_usd"].iloc[-1]),
-                    textcoords="offset points", xytext=(7, 0), fontsize=9,
-                    color=colour, va="center")
+        ax.plot(
+            g["captured_at_utc"],
+            g["price_usd"],
+            marker="o",
+            markersize=4.5,
+            linewidth=1.9,
+            color=colour,
+            label=label,
+        )
+        ax.annotate(
+            f"${g['price_usd'].iloc[-1]:,.0f}",
+            (g["captured_at_utc"].iloc[-1], g["price_usd"].iloc[-1]),
+            textcoords="offset points",
+            xytext=(7, 0),
+            fontsize=9,
+            color=colour,
+            va="center",
+        )
 
-    ax.set_title("Best Buy price movement, comparable configurations",
-                 fontsize=13, pad=22, loc="left")
-    ax.text(0, 1.03, humanize_group(group_key), transform=ax.transAxes,
-            fontsize=9, color="#555555")
+    ax.set_title(
+        "Best Buy price movement, comparable configurations",
+        fontsize=13,
+        pad=22,
+        loc="left",
+    )
+    ax.text(
+        0,
+        1.03,
+        humanize_group(group_key),
+        transform=ax.transAxes,
+        fontsize=9,
+        color="#555555",
+    )
     ax.set_ylabel("Price (USD)")
     ax.yaxis.set_major_formatter(lambda v, _: f"${v:,.0f}")
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d\n%H:%M"))
@@ -94,17 +137,36 @@ def plot_group(df: pd.DataFrame, group_key: str, out_path: Path,
     # Below the axes: with four or more lines there is no free space inside the
     # plot that does not sit on top of a series.
     ncol = min(len(sub["label"].unique()), 3)
-    ax.legend(frameon=False, fontsize=9, loc="upper center",
-              bbox_to_anchor=(0.5, -0.13), ncol=ncol)
+    ax.legend(
+        frameon=False,
+        fontsize=9,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.13),
+        ncol=ncol,
+    )
     span = sub["captured_at_utc"]
-    fig.text(0.01, -0.02,
-             f"Observation window {span.min():%Y-%m-%d %H:%M} to {span.max():%Y-%m-%d %H:%M} UTC"
-             f" · {len(sub)} snapshots · source: Best Buy",
-             fontsize=7.5, color="#555555")
+    fig.text(
+        0.01,
+        -0.02,
+        f"Observation window {span.min():%Y-%m-%d %H:%M} to {span.max():%Y-%m-%d %H:%M} UTC"
+        f" · {len(sub)} snapshots · source: Best Buy",
+        fontsize=7.5,
+        color="#555555",
+    )
     if watermark:
-        ax.text(0.5, 0.5, watermark, transform=ax.transAxes, fontsize=44,
-                color="#C2410C", alpha=0.16, ha="center", va="center",
-                rotation=22, weight="bold")
+        ax.text(
+            0.5,
+            0.5,
+            watermark,
+            transform=ax.transAxes,
+            fontsize=44,
+            color="#C2410C",
+            alpha=0.16,
+            ha="center",
+            va="center",
+            rotation=22,
+            weight="bold",
+        )
     fig.tight_layout(rect=(0, 0.06, 1, 1))
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, bbox_inches="tight")
@@ -138,7 +200,7 @@ def main(argv: list[str] | None = None) -> int:
             safe = key.replace("|", "_")
             path = plot_group(df, key, args.outdir / f"trend_{tag}_{safe}.png", col=col)
             print(f"wrote {path}")
-    print(f"wrote {args.outdir/'observations.csv'}, {args.outdir/'summary.csv'}")
+    print(f"wrote {args.outdir / 'observations.csv'}, {args.outdir / 'summary.csv'}")
     return 0
 
 

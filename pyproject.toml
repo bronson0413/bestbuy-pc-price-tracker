@@ -1,0 +1,65 @@
+[project]
+name = "pc-price-tracker"
+version = "1.1.0"
+description = "Tracks and compares prices of equivalent Windows PCs on Best Buy"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # import sorting
+    "B",        # bugbear: likely bugs, not just style
+    "C4",       # comprehension clarity
+    "UP",       # outdated syntax
+    "SIM",      # needless complexity
+    "RET",      # return-path smells
+    "ARG",      # unused arguments
+    "PTH",      # os.path where pathlib belongs
+]
+ignore = [
+    "E501",     # line length is handled by the formatter
+    "B008",     # argparse defaults are evaluated once on purpose
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG"]     # pytest fixtures arrive as unused-looking arguments
+"tools/*" = ["T201"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src", "tests", "tools"]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_optional = true
+check_untyped_defs = true
+# Third-party packages without stubs. Typing our own code is the point; typing
+# pandas internals is not.
+[[tool.mypy.overrides]]
+module = ["pandas.*", "matplotlib.*", "playwright.*", "yaml.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["src/tracker"]
+branch = true
+omit = ["*/sources/bestbuy_web.py"]   # needs a live browser; covered manually
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

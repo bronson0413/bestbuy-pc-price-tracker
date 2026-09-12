@@ -1,4 +1,5 @@
 """Source interface. Every quote carries its own provenance."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

@@ -1,5 +1,8 @@
 # Best Buy PC Pricing Tracker
 
+[![CI](https://github.com/bronson0413/bestbuy-pc-price-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/bronson0413/bestbuy-pc-price-tracker/actions/workflows/ci.yml)
+[![Snapshots](https://github.com/bronson0413/bestbuy-pc-price-tracker/actions/workflows/track.yml/badge.svg)](https://github.com/bronson0413/bestbuy-pc-price-tracker/actions/workflows/track.yml)
+
 Tracks the online price of directly comparable Windows PCs on Best Buy, stores a
 dated snapshot on every run, and charts how the prices move against each other.
 
@@ -60,12 +63,23 @@ python -m tracker.report               # write charts + CSV into reports/
 streamlit run app.py                   # interactive tracker
 ```
 
-Verify the pipeline before real data exists:
+## Quality checks
 
 ```bash
-pytest -q            # 18 tests over the equivalence and validation rules
-python tools/selftest.py   # end-to-end run on synthetic, watermarked data
+pip install -r requirements-dev.txt
+pre-commit install          # lint, format and type-check before every commit
+
+ruff check src tests tools  # lint
+ruff format src tests tools # format
+mypy src                    # type check
+pytest --cov                # 61 tests, 81% line coverage
+python tools/check_grouping.py   # the configured products still group correctly
+python tools/selftest.py    # end-to-end run on synthetic, watermarked data
 ```
+
+CI runs all of the above on every push. The snapshot schedule is a separate
+workflow so that a failing test never interrupts price collection, and a
+collection outage never looks like a broken build.
 
 ## Collection sources
 

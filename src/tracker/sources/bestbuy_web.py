@@ -6,6 +6,7 @@ can always be traced back to how it was obtained. Bot mitigation on the site
 means this path is expected to fail from datacenter IPs (including CI runners);
 that failure is reported, never silently substituted.
 """
+
 from __future__ import annotations
 
 import json
@@ -17,7 +18,8 @@ from typing import Any
 from .base import PriceSource, Quote, SourceError
 
 _PRICE_ATTR = re.compile(
-    r'data-testid="customer-price"[^>]*>.*?\$([\d,]+\.\d{2})', re.S)
+    r'data-testid="customer-price"[^>]*>.*?\$([\d,]+\.\d{2})', re.S
+)
 
 
 class BestBuyWebSource(PriceSource):
@@ -41,10 +43,18 @@ class BestBuyWebSource(PriceSource):
         window.chrome = {runtime: {}};
     """
 
-    def __init__(self, *, headless: bool | None = None, timeout_ms: int = 60_000,
-                 locale: str = "en-US", attempts: int = 2) -> None:
+    def __init__(
+        self,
+        *,
+        headless: bool | None = None,
+        timeout_ms: int = 60_000,
+        locale: str = "en-US",
+        attempts: int = 2,
+    ) -> None:
         env = os.environ.get("TRACKER_HEADFUL", "").strip().lower()
-        self.headless = (env not in ("1", "true", "yes")) if headless is None else headless
+        self.headless = (
+            (env not in ("1", "true", "yes")) if headless is None else headless
+        )
         self.timeout_ms = timeout_ms
         self.locale = locale
         self.attempts = attempts
@@ -57,7 +67,8 @@ class BestBuyWebSource(PriceSource):
         except ImportError as exc:
             raise SourceError("playwright is not installed") from exc
 
-        html = title = None
+        html: str | None = None
+        title: str = ""
         last_error: Exception | None = None
         for attempt in range(self.attempts):
             try:
@@ -92,7 +103,6 @@ class BestBuyWebSource(PriceSource):
                 )
         raise SourceError(f"no price found on page for sku {sku}")
 
-
     def _render(self, url: str) -> tuple[str, str]:
         from playwright.sync_api import sync_playwright
 
@@ -101,14 +111,18 @@ class BestBuyWebSource(PriceSource):
             ctx = browser.new_context(
                 locale=self.locale,
                 timezone_id="America/Chicago",
-                user_agent=("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                            "AppleWebKit/537.36 (KHTML, like Gecko) "
-                            "Chrome/151.0.0.0 Safari/537.36"),
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/151.0.0.0 Safari/537.36"
+                ),
                 viewport={"width": 1440, "height": 900},
                 extra_http_headers={
                     "Accept-Language": "en-US,en;q=0.9",
-                    "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,"
-                               "image/avif,image/webp,*/*;q=0.8"),
+                    "Accept": (
+                        "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                        "image/avif,image/webp,*/*;q=0.8"
+                    ),
                     "Upgrade-Insecure-Requests": "1",
                 },
             )
@@ -124,16 +138,23 @@ class BestBuyWebSource(PriceSource):
 
 
 def _looks_blocked(html: str, title: str) -> bool:
-    needles = ("access denied", "are you a robot", "unusual traffic",
-               "reference #", "pardon the interruption")
+    needles = (
+        "access denied",
+        "are you a robot",
+        "unusual traffic",
+        "reference #",
+        "pardon the interruption",
+    )
     haystack = f"{title} {html[:4000]}".lower()
     return any(n in haystack for n in needles)
 
 
 def _from_jsonld(html: str) -> dict[str, Any] | None:
     for block in re.findall(
-            r'<script[^>]+type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
-            html, re.S | re.I):
+        r'<script[^>]+type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+        html,
+        re.S | re.I,
+    ):
         try:
             data = json.loads(block.strip())
         except json.JSONDecodeError:
@@ -150,8 +171,11 @@ def _from_jsonld(html: str) -> dict[str, Any] | None:
             price = _to_float(offer.get("price") or offer.get("lowPrice"))
             if price is None:
                 continue
-            return {"price": price, "title": node.get("name"),
-                    "availability": offer.get("availability")}
+            return {
+                "price": price,
+                "title": node.get("name"),
+                "availability": offer.get("availability"),
+            }
     return None
 
 

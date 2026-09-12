@@ -4,6 +4,7 @@ Preferred over scraping because it is the retailer's own sanctioned interface,
 it is stable from any IP (including CI runners), and it returns the regular /
 sale price split that a naive page scrape collapses into one number.
 """
+
 from __future__ import annotations
 
 import os
@@ -15,17 +16,32 @@ import requests
 from .base import PriceSource, Quote, SourceError
 
 ENDPOINT = "https://api.bestbuy.com/v1/products(sku={sku})"
-FIELDS = ",".join([
-    "sku", "name", "salePrice", "regularPrice", "onSale", "orderable",
-    "url", "manufacturer", "modelNumber",
-])
+FIELDS = ",".join(
+    [
+        "sku",
+        "name",
+        "salePrice",
+        "regularPrice",
+        "onSale",
+        "orderable",
+        "url",
+        "manufacturer",
+        "modelNumber",
+    ]
+)
 
 
 class BestBuyApiSource(PriceSource):
     name = "bestbuy_products_api"
 
-    def __init__(self, api_key: str | None = None, *, timeout: int = 20,
-                 max_retries: int = 3, min_interval_s: float = 1.0) -> None:
+    def __init__(
+        self,
+        api_key: str | None = None,
+        *,
+        timeout: int = 20,
+        max_retries: int = 3,
+        min_interval_s: float = 1.0,
+    ) -> None:
         self.api_key = api_key or os.environ.get("BESTBUY_API_KEY", "")
         self.timeout = timeout
         self.max_retries = max_retries
@@ -50,10 +66,11 @@ class BestBuyApiSource(PriceSource):
         for attempt in range(self.max_retries):
             self._throttle()
             try:
-                resp = requests.get(ENDPOINT.format(sku=sku), params=params,
-                                    timeout=self.timeout)
+                resp = requests.get(
+                    ENDPOINT.format(sku=sku), params=params, timeout=self.timeout
+                )
                 if resp.status_code == 429:  # documented per-key quota
-                    time.sleep(2 ** attempt * 2)
+                    time.sleep(2**attempt * 2)
                     last_error = SourceError("rate limited (429)")
                     continue
                 resp.raise_for_status()
@@ -67,8 +84,9 @@ class BestBuyApiSource(PriceSource):
                     price_usd=_as_float(p.get("salePrice")),
                     regular_price_usd=_as_float(p.get("regularPrice")),
                     on_sale=p.get("onSale"),
-                    availability="orderable" if p.get("orderable") in ("Available", True)
-                                 else str(p.get("orderable")),
+                    availability="orderable"
+                    if p.get("orderable") in ("Available", True)
+                    else str(p.get("orderable")),
                     listing_title=p.get("name"),
                     source_method=self.name,
                     source_url=p.get("url") or url,
@@ -78,7 +96,7 @@ class BestBuyApiSource(PriceSource):
                 raise
             except Exception as exc:  # network, JSON, HTTP
                 last_error = exc
-                time.sleep(2 ** attempt)
+                time.sleep(2**attempt)
         raise SourceError(f"API fetch failed for sku {sku}: {last_error}")
 
 

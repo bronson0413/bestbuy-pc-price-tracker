@@ -10,6 +10,7 @@ collector verifies that the SKU echoed back matches the SKU requested, and every
 observation is tagged with this source so a reviewer can tell which numbers came
 through an intermediary.
 """
+
 from __future__ import annotations
 
 import os
@@ -27,8 +28,14 @@ ENDPOINT = f"https://{HOST}/product/price"
 class RapidApiSource(PriceSource):
     name = "rapidapi_bestbuy"
 
-    def __init__(self, api_key: str | None = None, *, timeout: int = 20,
-                 max_retries: int = 3, min_interval_s: float = 1.5) -> None:
+    def __init__(
+        self,
+        api_key: str | None = None,
+        *,
+        timeout: int = 20,
+        max_retries: int = 3,
+        min_interval_s: float = 1.5,
+    ) -> None:
         self.api_key = api_key or os.environ.get("RAPIDAPI_KEY", "")
         self.timeout = timeout
         self.max_retries = max_retries
@@ -59,16 +66,18 @@ class RapidApiSource(PriceSource):
         for attempt in range(self.max_retries):
             self._throttle()
             try:
-                resp = requests.get(ENDPOINT, params={"sku": sku},
-                                    headers=headers, timeout=self.timeout)
+                resp = requests.get(
+                    ENDPOINT, params={"sku": sku}, headers=headers, timeout=self.timeout
+                )
                 if resp.status_code == 429:
-                    time.sleep(2 ** attempt * 3)
+                    time.sleep(2**attempt * 3)
                     last_error = SourceError("rate limited (429)")
                     continue
                 if resp.status_code in (401, 403):
                     raise SourceError(
                         f"rejected with HTTP {resp.status_code}; check the key "
-                        "and that the plan is subscribed")
+                        "and that the plan is subscribed"
+                    )
                 resp.raise_for_status()
                 payload: dict[str, Any] = resp.json()
                 return self._to_quote(sku, payload, url)
@@ -76,14 +85,16 @@ class RapidApiSource(PriceSource):
                 raise
             except Exception as exc:
                 last_error = exc
-                time.sleep(2 ** attempt)
+                time.sleep(2**attempt)
 
         raise SourceError(f"fetch failed for sku {sku}: {last_error}")
 
     def _to_quote(self, sku: str, payload: dict[str, Any], url: str | None) -> Quote:
         if not payload.get("success"):
-            raise SourceError(f"API reported failure for sku {sku}: "
-                              f"{payload.get('message') or payload.get('error')}")
+            raise SourceError(
+                f"API reported failure for sku {sku}: "
+                f"{payload.get('message') or payload.get('error')}"
+            )
         data = payload.get("data") or {}
         if not data:
             raise SourceError(f"empty payload for sku {sku}")
@@ -93,8 +104,7 @@ class RapidApiSource(PriceSource):
         if returned_sku and returned_sku != str(sku):
             # The aggregator is an intermediary; never trust it to have answered
             # the question that was actually asked.
-            raise SourceError(
-                f"sku mismatch: requested {sku}, received {returned_sku}")
+            raise SourceError(f"sku mismatch: requested {sku}, received {returned_sku}")
 
         price = _as_float(data.get("customerPrice"))
         if price is None:
@@ -115,9 +125,17 @@ class RapidApiSource(PriceSource):
             listing_title=None,  # this endpoint returns pricing only
             source_method=self.name,
             source_url=url,
-            raw={k: data.get(k) for k in
-                 ("customerPrice", "previousPrice", "isOnSale", "hasSavings",
-                  "priceChangeTotalSavingsAmount", "skuDataAnalytics")},
+            raw={
+                k: data.get(k)
+                for k in (
+                    "customerPrice",
+                    "previousPrice",
+                    "isOnSale",
+                    "hasSavings",
+                    "priceChangeTotalSavingsAmount",
+                    "skuDataAnalytics",
+                )
+            },
         )
 
 

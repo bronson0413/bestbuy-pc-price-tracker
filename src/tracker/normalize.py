@@ -6,19 +6,34 @@ identical. Every rule is deliberately conservative -- when a value cannot be
 parsed with confidence we return None, which pushes the product into the
 "unmatched" bucket and out of the comparison rather than guessing silently.
 """
+
 from __future__ import annotations
 
 import re
 import unicodedata
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 
-_INTEL_ULTRA = re.compile(r"core\s*ultra\s*(?P<tier>\d)\s*(?P<sku>\d{3}[a-z]{0,2})", re.I)
-_INTEL_CORE = re.compile(r"core\s*i(?P<tier>[3579])[\s-]*(?P<sku>\d{4,5}[a-z]{0,2})", re.I)
-_AMD_RYZEN = re.compile(r"ryzen\s*(?P<ai>ai\s*)?(?P<tier>\d)\s*(?P<sku>\d{3,4}[a-z]{0,3})", re.I)
-_SNAPDRAGON = re.compile(r"snapdragon\s*x\s*(?P<line>elite|plus)\s*(?P<sku>x\d[a-z]?[\d-]*)?", re.I)
+_INTEL_ULTRA = re.compile(
+    r"core\s*ultra\s*(?P<tier>\d)\s*(?P<sku>\d{3}[a-z]{0,2})", re.I
+)
+_INTEL_CORE = re.compile(
+    r"core\s*i(?P<tier>[3579])[\s-]*(?P<sku>\d{4,5}[a-z]{0,2})", re.I
+)
+_AMD_RYZEN = re.compile(
+    r"ryzen\s*(?P<ai>ai\s*)?(?P<tier>\d)\s*(?P<sku>\d{3,4}[a-z]{0,3})", re.I
+)
+_SNAPDRAGON = re.compile(
+    r"snapdragon\s*x\s*(?P<line>elite|plus)\s*(?P<sku>x\d[a-z]?[\d-]*)?", re.I
+)
 
-_STORAGE = re.compile(r"(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>gb|tb)\s*(?:pcie\s*)?(?:nvme\s*)?(?:ssd|solid state)", re.I)
-_RAM = re.compile(r"(?P<num>\d+)\s*gb\s*(?:lpddr\d x?\s*|ddr\d x?\s*|unified\s*)?(?:memory|ram)\b", re.I)
+_STORAGE = re.compile(
+    r"(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>gb|tb)\s*(?:pcie\s*)?(?:nvme\s*)?(?:ssd|solid state)",
+    re.I,
+)
+_RAM = re.compile(
+    r"(?P<num>\d+)\s*gb\s*(?:lpddr\d x?\s*|ddr\d x?\s*|unified\s*)?(?:memory|ram)\b",
+    re.I,
+)
 _RAM_LOOSE = re.compile(r"\b(?P<num>4|8|12|16|24|32|48|64|96|128)\s*gb\b", re.I)
 
 _FORM_FACTORS = {
@@ -121,7 +136,9 @@ def normalize_device_type(text: str | None) -> str | None:
 
 # Processor tiers. Two machines in the same tier are not identical, but a buyer
 # choosing between them is making a price decision rather than a spec decision.
-_TIER = re.compile(r"^(intel-ultra\d|intel-i\d|amd-ryzenai\d|amd-ryzen\d|qc-snapdragon-x-\w+)")
+_TIER = re.compile(
+    r"^(intel-ultra\d|intel-i\d|amd-ryzenai\d|amd-ryzen\d|qc-snapdragon-x-\w+)"
+)
 
 
 def cpu_tier(cpu: str | None) -> str | None:
@@ -149,14 +166,29 @@ class NormalizedSpec:
     def missing(self) -> list[str]:
         return [k for k, v in asdict(self).items() if v is None]
 
+    def _parts(self, cpu: str) -> list[str]:
+        """The six key components, given an already-resolved CPU token.
+
+        Both keys share this shape; only the CPU differs. Taking cpu as an
+        argument keeps the None-narrowing in one place instead of repeating it.
+        """
+        assert self.ram_gb is not None and self.storage_gb is not None
+        assert self.os is not None and self.device_type is not None
+        assert self.form_factor is not None
+        return [
+            cpu,
+            f"{self.ram_gb}gb",
+            f"{self.storage_gb}gb",
+            self.os,
+            self.device_type,
+            self.form_factor,
+        ]
+
     def group_key(self) -> str:
         """Deterministic equivalence key. Incomplete specs never group."""
-        if not self.complete:
+        if not self.complete or self.cpu is None:
             return "unmatched"
-        return "|".join([
-            self.cpu, f"{self.ram_gb}gb", f"{self.storage_gb}gb",
-            self.os, self.device_type, self.form_factor,
-        ])
+        return "|".join(self._parts(self.cpu))
 
     def tier_key(self) -> str:
         """A looser key: same processor tier and configuration, any SKU.
@@ -166,24 +198,30 @@ class NormalizedSpec:
         tracker actually exists to serve. Both are kept; neither replaces the
         other, and the app lets a reviewer switch between them.
         """
-        if not self.complete:
+        tier = cpu_tier(self.cpu)
+        if not self.complete or tier is None:
             return "unmatched"
-        return "|".join([
-            cpu_tier(self.cpu), f"{self.ram_gb}gb", f"{self.storage_gb}gb",
-            self.os, self.device_type, self.form_factor,
-        ])
+        return "|".join(self._parts(tier))
 
     def label(self) -> str:
         if not self.complete:
             return "Unmatched / incomplete specs"
-        return (f"{self.cpu} · {self.ram_gb}GB RAM · {self.storage_gb}GB SSD · "
-                f"{self.os} · {self.form_factor}")
+        return (
+            f"{self.cpu} · {self.ram_gb}GB RAM · {self.storage_gb}GB SSD · "
+            f"{self.os} · {self.form_factor}"
+        )
 
 
-def parse_spec(*, title: str | None = None, cpu: str | None = None,
-               ram: str | None = None, storage: str | None = None,
-               os_: str | None = None, device_type: str | None = None,
-               form_factor: str | None = None) -> NormalizedSpec:
+def parse_spec(
+    *,
+    title: str | None = None,
+    cpu: str | None = None,
+    ram: str | None = None,
+    storage: str | None = None,
+    os_: str | None = None,
+    device_type: str | None = None,
+    form_factor: str | None = None,
+) -> NormalizedSpec:
     """Parse declared fields, falling back to the listing title for any gap."""
     t = title or ""
     return NormalizedSpec(
