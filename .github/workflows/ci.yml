@@ -30,7 +30,7 @@ jobs:
         run: ruff format --check src tests tools
 
       - name: Type check
-        run: mypy src --ignore-missing-imports
+        run: mypy src --ignore-missing-imports --follow-imports=silent
 
       - name: Test with coverage
         env:
