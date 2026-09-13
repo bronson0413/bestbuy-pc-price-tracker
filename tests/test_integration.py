@@ -128,3 +128,40 @@ def test_the_cli_exits_nonzero_when_nothing_could_be_collected(workspace: Path) 
     empty = workspace / "empty.yaml"
     empty.write_text("products: []\n", encoding="utf-8")
     assert main(["--config", str(empty), "--db", str(workspace / "x.sqlite")]) == 2
+
+
+def test_a_re_reported_reading_is_not_counted_as_a_collection(workspace: Path) -> None:
+    """The failure that hid a stalled collector for two days.
+
+    The manual tier replays the timestamp recorded in its CSV, so a scheduled
+    run would fetch the same reading, store nothing, and still report success.
+    Four scheduled runs committed to the repository while the price series
+    stood still — visible only by querying the database.
+    """
+    db = workspace / "prices.sqlite"
+    run(workspace / "config.yaml", db, "manual")
+    first = len(load_frame(db))
+
+    # A second run reads the same CSV rows and must advance nothing.
+    assert run(workspace / "config.yaml", db, "manual") == 1
+    assert len(load_frame(db)) == first
+
+    with st.connect(db) as conn:
+        rows = conn.execute(
+            "SELECT succeeded, notes FROM collection_runs ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        assert rows["succeeded"] == 0  # not 2
+        assert "stale" in (rows["notes"] or "")
+
+        stale_flags = conn.execute(
+            "SELECT COUNT(*) FROM review_flags WHERE rule = 'no_new_observation'"
+        ).fetchone()[0]
+        assert stale_flags == 2  # one per product that did not advance
+
+
+def test_a_run_that_advances_nothing_exits_nonzero(workspace: Path) -> None:
+    # Exit status is what a scheduler can act on; a stalled run must not look
+    # like a healthy one.
+    db = workspace / "prices.sqlite"
+    assert run(workspace / "config.yaml", db, "manual") == 0
+    assert run(workspace / "config.yaml", db, "manual") == 1

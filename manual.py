@@ -41,23 +41,38 @@ class ManualSource(PriceSource):
                     rows.append(row)
             return rows
 
-    def history(self, sku):
+    def history(self, sku: str) -> list[Quote]:
+        """Every recorded reading for one SKU, oldest first.
+
+        `fetch` returns only the latest reading because the source interface
+        answers "what is the price now". Backfilling a log of readings taken
+        over several days is a different question, and losing the earlier ones
+        to that interface would silently discard observations a person actually
+        made.
+        """
         rows = sorted(
             (r for r in self.load() if r.get("sku") == sku),
             key=lambda r: r.get("captured_at_utc", ""),
         )
-        quotes = []
+        quotes: list[Quote] = []
         for row in rows:
             try:
                 price = float(row["price_usd"])
             except (KeyError, ValueError):
                 continue
-            quotes.append(Quote(
-                sku=sku, price_usd=price, source_method=self.name,
-                availability=row.get("availability"),
-                raw={"entered_by": row.get("entered_by", "unknown"),
-                     "screenshot": row.get("screenshot", ""),
-                     "captured_at_utc": row.get("captured_at_utc", "")}))
+            quotes.append(
+                Quote(
+                    sku=sku,
+                    price_usd=price,
+                    source_method=self.name,
+                    availability=row.get("availability"),
+                    raw={
+                        "entered_by": row.get("entered_by", "unknown"),
+                        "screenshot": row.get("screenshot", ""),
+                        "captured_at_utc": row.get("captured_at_utc", ""),
+                    },
+                )
+            )
         return quotes
 
     def fetch(self, sku: str, url: str | None = None) -> Quote:
