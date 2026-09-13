@@ -328,8 +328,9 @@ def plot_group_premium(
     return out_path
 
 
-def plot_trend(df: pd.DataFrame, group_key: str, out_path: Path,
-               col: str = "tier_key") -> Path:
+def plot_trend(
+    df: pd.DataFrame, group_key: str, out_path: Path, col: str = "tier_key"
+) -> Path:
     """Observed price over time, with the retailer's stated regular price.
 
     Two series per product, drawn differently on purpose. The solid line is what
@@ -353,41 +354,79 @@ def plot_trend(df: pd.DataFrame, group_key: str, out_path: Path,
         g = g.sort_values("captured_at_utc")
         colour = PALETTE[i % len(PALETTE)]
         single = len(g) == 1
-        ax.plot(g["captured_at_utc"], g["price_usd"],
-                marker="o" if not single else "D",
-                markersize=5 if not single else 6,
-                linewidth=2 if not single else 0,
-                color=colour, label=label + ("  (one observation)" if single else ""),
-                zorder=3)
+        ax.plot(
+            g["captured_at_utc"],
+            g["price_usd"],
+            marker="o" if not single else "D",
+            markersize=5 if not single else 6,
+            linewidth=2 if not single else 0,
+            color=colour,
+            label=label + ("  (one observation)" if single else ""),
+            zorder=3,
+        )
         if single:
             # Extend a faint guide so the reader can place the point against the
             # others without implying a series that was never observed.
-            ax.plot([sub["captured_at_utc"].min(), sub["captured_at_utc"].max()],
-                    [g["price_usd"].iloc[0]] * 2, linestyle=":", linewidth=0.9,
-                    color=colour, alpha=0.35, zorder=1)
+            ax.plot(
+                [sub["captured_at_utc"].min(), sub["captured_at_utc"].max()],
+                [g["price_usd"].iloc[0]] * 2,
+                linestyle=":",
+                linewidth=0.9,
+                color=colour,
+                alpha=0.35,
+                zorder=1,
+            )
 
         regular = g["regular_price_usd"].dropna()
         latest_price = g["price_usd"].iloc[-1]
         if not regular.empty and regular.iloc[-1] > latest_price:
             ref = float(regular.iloc[-1])
-            ax.plot(g["captured_at_utc"], [ref] * len(g), linestyle=(0, (4, 3)),
-                    linewidth=1.3, color=colour, alpha=0.55, zorder=2)
+            ax.plot(
+                g["captured_at_utc"],
+                [ref] * len(g),
+                linestyle=(0, (4, 3)),
+                linewidth=1.3,
+                color=colour,
+                alpha=0.55,
+                zorder=2,
+            )
             cut = (ref - latest_price) / ref * 100
             discounts.append((label, cut))
-            ax.annotate(f"−{cut:.0f}%",
-                        (g["captured_at_utc"].iloc[0], (ref + latest_price) / 2),
-                        textcoords="offset points", xytext=(6, 0), fontsize=8.5,
-                        color=colour, va="center")
+            ax.annotate(
+                f"−{cut:.0f}%",
+                (g["captured_at_utc"].iloc[0], (ref + latest_price) / 2),
+                textcoords="offset points",
+                xytext=(6, 0),
+                fontsize=8.5,
+                color=colour,
+                va="center",
+            )
 
-        ax.annotate(f"${latest_price:,.0f}",
-                    (g["captured_at_utc"].iloc[-1], latest_price),
-                    textcoords="offset points", xytext=(8, 0), fontsize=9,
-                    color=colour, va="center", fontweight="bold")
+        ax.annotate(
+            f"${latest_price:,.0f}",
+            (g["captured_at_utc"].iloc[-1], latest_price),
+            textcoords="offset points",
+            xytext=(8, 0),
+            fontsize=9,
+            color=colour,
+            va="center",
+            fontweight="bold",
+        )
 
-    ax.set_title("Observed price over time, against the retailer's regular price",
-                 fontsize=13, pad=22, loc="left")
-    ax.text(0, 1.03, humanize_group(group_key), transform=ax.transAxes,
-            fontsize=9, color="#555555")
+    ax.set_title(
+        "Observed price over time, against the retailer's regular price",
+        fontsize=13,
+        pad=22,
+        loc="left",
+    )
+    ax.text(
+        0,
+        1.03,
+        humanize_group(group_key),
+        transform=ax.transAxes,
+        fontsize=9,
+        color="#555555",
+    )
     ax.set_ylabel("Price (USD)")
     ax.yaxis.set_major_formatter(lambda v, _: f"${v:,.0f}")
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d\n%H:%M"))
@@ -396,21 +435,32 @@ def plot_trend(df: pd.DataFrame, group_key: str, out_path: Path,
         ax.spines[spine].set_visible(False)
 
     ncol = min(len(sub["label"].unique()), 3)
-    ax.legend(frameon=False, fontsize=9, loc="upper center",
-              bbox_to_anchor=(0.5, -0.14), ncol=ncol)
+    ax.legend(
+        frameon=False,
+        fontsize=9,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.14),
+        ncol=ncol,
+    )
 
     span = sub["captured_at_utc"]
     singles = sum(1 for _, g in sub.groupby("label") if len(g) == 1)
-    note = (f"Solid: observed price, {len(sub)} snapshots between "
-            f"{span.min():%d %b %H:%M} and {span.max():%d %b %H:%M} UTC. "
-            "Dashed: regular price as stated by the retailer — a claim, not an "
-            "observed history.")
+    note = (
+        f"Solid: observed price, {len(sub)} snapshots between "
+        f"{span.min():%d %b %H:%M} and {span.max():%d %b %H:%M} UTC. "
+        "Dashed: regular price as stated by the retailer — a claim, not an "
+        "observed history."
+    )
     if singles:
-        note += (f"  {singles} product(s) were added late and carry a single "
-                 "observation, drawn as a diamond on a dotted guide.")
+        note += (
+            f"  {singles} product(s) were added late and carry a single "
+            "observation, drawn as a diamond on a dotted guide."
+        )
     if discounts:
-        note += ("  Prices did not move during the window; the gap between the "
-                 "lines is the discount already in effect when observation began.")
+        note += (
+            "  Prices did not move during the window; the gap between the "
+            "lines is the discount already in effect when observation began."
+        )
     fig.text(0.01, -0.055, note, fontsize=7.5, color="#777777", wrap=True)
     fig.tight_layout(rect=(0, 0.07, 1, 1))
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -443,7 +493,9 @@ def main(argv: list[str] | None = None) -> int:
             if df[df[col] == key]["sku"].nunique() < 2:
                 continue  # a group of one is not a comparison
             safe = key.replace("|", "_")
-            path = plot_group(df, key, args.outdir / f"movement_{tag}_{safe}.png", col=col)
+            path = plot_group(
+                df, key, args.outdir / f"movement_{tag}_{safe}.png", col=col
+            )
             print(f"wrote {path}")
             path = plot_trend(df, key, args.outdir / f"trend_{tag}_{safe}.png", col=col)
             print(f"wrote {path}")

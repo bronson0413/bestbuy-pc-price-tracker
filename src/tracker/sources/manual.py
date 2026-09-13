@@ -52,12 +52,19 @@ class ManualSource(PriceSource):
                 price = float(row["price_usd"])
             except (KeyError, ValueError):
                 continue
-            quotes.append(Quote(
-                sku=sku, price_usd=price, source_method=self.name,
-                availability=row.get("availability"),
-                raw={"entered_by": row.get("entered_by", "unknown"),
-                     "screenshot": row.get("screenshot", ""),
-                     "captured_at_utc": row.get("captured_at_utc", "")}))
+            quotes.append(
+                Quote(
+                    sku=sku,
+                    price_usd=price,
+                    source_method=self.name,
+                    availability=row.get("availability"),
+                    raw={
+                        "entered_by": row.get("entered_by", "unknown"),
+                        "screenshot": row.get("screenshot", ""),
+                        "captured_at_utc": row.get("captured_at_utc", ""),
+                    },
+                )
+            )
         return quotes
 
     def fetch(self, sku: str, url: str | None = None) -> Quote:
