@@ -1,7 +1,6 @@
 # Best Buy PC Pricing Tracker
 
 [![CI](https://github.com/bronson0413/bestbuy-pc-price-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/bronson0413/bestbuy-pc-price-tracker/actions/workflows/ci.yml)
-[![Snapshots](https://github.com/bronson0413/bestbuy-pc-price-tracker/actions/workflows/track.yml/badge.svg)](https://github.com/bronson0413/bestbuy-pc-price-tracker/actions/workflows/track.yml)
 
 Tracks the online price of directly comparable Windows PCs on Best Buy, stores a
 dated snapshot on every run, and charts how the prices move against each other.

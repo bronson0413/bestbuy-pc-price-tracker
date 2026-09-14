@@ -1,11 +1,14 @@
 name: Capture price snapshot
 
 on:
-  schedule:
-    # Every 6 hours. GitHub may delay scheduled runs under load, so the
-    # captured_at timestamp recorded by the collector is the authoritative one,
-    # not the cron time.
-    - cron: "0 */6 * * *"
+  # The schedule is paused. The third-party pricing source exhausted its
+  # free-tier quota, so every scheduled run failed without collecting anything
+  # -- a workflow that cannot succeed is noise, not monitoring. Restore the
+  # cron once a paid plan or an official API key is available.
+  #
+  # schedule:
+  #   - cron: "0 */6 * * *"   # every 6 hours; the collector's own timestamp
+  #                           # is authoritative, not the cron time
   workflow_dispatch:
 
 permissions:
