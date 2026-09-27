@@ -117,9 +117,15 @@ if unmatched:
         "parsed with confidence, so they are not grouped."
     )
 
-pivot = sub.pivot_table(
-    index="captured_at_utc", columns="label", values="price_usd", aggfunc="last"
-).sort_index()
+# One collection run fetches products a few seconds apart. Aligning on the raw
+# timestamp leaves a product blank in its neighbours' rows, and the chart then
+# breaks some lines but not others. Aligning on the hour of the run keeps every
+# line drawn the same way.
+pivot = (
+    sub.assign(run_utc=sub["captured_at_utc"].dt.floor("h"))
+    .pivot_table(index="run_utc", columns="label", values="price_usd", aggfunc="last")
+    .sort_index()
+)
 if len(pivot) < 2:
     st_ui.info(
         "One snapshot so far, so there is no line to draw yet. "
@@ -165,10 +171,10 @@ with left:
     spread = dearest["latest_usd"] - cheapest["latest_usd"]
     premium = spread / cheapest["latest_usd"] * 100 if cheapest["latest_usd"] else 0
     st_ui.write(
-        f"Cheapest right now: **{cheapest['product']}** at ${cheapest['latest_usd']:,.2f}. "
-        f"Dearest: **{dearest['product']}** at ${dearest['latest_usd']:,.2f} — "
+        f"Cheapest right now: **{cheapest['product']}** at \\${cheapest['latest_usd']:,.2f}. "
+        f"Dearest: **{dearest['product']}** at \\${dearest['latest_usd']:,.2f} — "
         f"a **{premium:.0f}% premium** for the same configuration, a spread of "
-        f"${spread:,.2f}."
+        f"\\${spread:,.2f}."
     )
 
 with right:
