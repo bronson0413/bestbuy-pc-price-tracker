@@ -5,9 +5,7 @@
 Tracks the online price of directly comparable Windows PCs on Best Buy, stores a
 dated snapshot on every run, and charts how the prices move against each other.
 
-**Demo video:** _link to be added_
-
-The Streamlit app can also be run locally (see Run below); a hosted copy on the free
+The Streamlit app can be run locally (see Run below); a hosted copy on the free
 tier is at <https://bestbuy-pc-price-tracker-fqxn4jczndtyqg3pdx4agu.streamlit.app/>
 but may be asleep.
 
