@@ -5,7 +5,46 @@
 Tracks the online price of directly comparable Windows PCs on Best Buy, stores a
 dated snapshot on every run, and charts how the prices move against each other.
 
-Built for the Lenovo AI Application Development Intern assessment (WD00102927).
+**Demo video:** _link to be added_
+
+The Streamlit app can also be run locally (see Run below); a hosted copy on the free
+tier is at <https://bestbuy-pc-price-tracker-fqxn4jczndtyqg3pdx4agu.streamlit.app/>
+but may be asleep.
+
+> **Data status:** automated collection paused in September 2026 after the
+> third-party API quota ran out (HTTP 429). The app and screenshots show the
+> data recorded up to then; the failures are kept in the collection-health view
+> on purpose.
+
+## Screenshots
+
+**Price chart** — four brands in the same spec tier on one chart.
+
+![Price chart](docs/screenshots/price-chart.png)
+
+**Ask about prices** — the assistant answers through five fixed query functions; every call is shown.
+
+![Price question](docs/screenshots/ask-prices.png)
+
+**Ask about products** — answers come only from retrieved product-page passages, with the source cited.
+
+![Product question](docs/screenshots/ask-products.png)
+
+**Review queue** — suspicious observations are flagged for a person, never auto-corrected.
+
+![Review queue](docs/screenshots/review-queue.png)
+
+**Collection health** — where each price came from and why collection failed, grouped by cause.
+
+![Collection health](docs/screenshots/collection-health.png)
+
+## How it was built
+
+Built with Claude Code as the implementation engine: the agent wrote most of the
+code; I set the architecture and owned debugging and verification. Decisions I
+kept for myself: the model only calls five fixed, parameterized query functions
+and never writes SQL; when the rule parser and the model disagree, the rules win
+and the field is flagged for review. Details in `docs/AI_USAGE.md`.
 
 - `docs/EXPLANATION.md` — methodology, assumptions, limitations
 - `docs/AI_USAGE.md` — AI tool usage and human validation record
@@ -154,7 +193,7 @@ pre-commit install          # lint, format and type-check before every commit
 ruff check src tests tools  # lint
 ruff format src tests tools # format
 mypy src                    # type check
-pytest --cov                # 138 tests, 79% line coverage
+pytest --cov                # 147 tests
 python tools/check_grouping.py   # the configured products still group correctly
 python tools/selftest.py    # end-to-end run on synthetic, watermarked data
 ```
